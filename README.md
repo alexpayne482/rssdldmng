@@ -16,7 +16,7 @@ pip install rssdldmng
 
 install package with pip from archive
 ```
-wget ....
+wget https://github.com/alexpayne482/rssdldmng/releases/download/0.2.0/rssdldmng-0.2.0.dev0.tar.gz
 pip install rssdldmng-0.2.0.dev0.tar.gz
 ```
 
@@ -27,7 +27,7 @@ rssdldmng
 
 make service with autostart
 ```
-wget ....
+wget https://raw.githubusercontent.com/alexpayne482/rssdldmng/master/make_service.sh
 ./make_service.sh
 ```
 
