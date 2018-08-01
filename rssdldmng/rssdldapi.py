@@ -34,7 +34,7 @@ class RSSdldApiServer(RESTHttpServer):
         return self.manager.get_latest()
 
     def get_status(self, handler):
-        return None
+        return self.manager.get_status()
 
     def add_show(self, handler):
         return None

@@ -87,4 +87,23 @@ class RSSdldMng:
             return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7))
         return []
 
+    def get_status(self):
+        new = 0
+        downloading = 0
+        available = 0
+        if self.downloader:
+            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7)):
+                if ep.state <= IState.NEW.value:
+                    new += 1
+                elif ep.state < IState.AVAILABLE.value:
+                    downloading += 1
+                else:
+                    if not ep.library:
+                        downloading += 1
+                    elif ep.library.playcount < 1:
+                        available += 1
+            #return "{0} new, {1} downloading, {2} available".format(new, downloading, available)
+            return { "new": new, "downloading" : downloading, "available": available }
+        return "NA"
+
 
