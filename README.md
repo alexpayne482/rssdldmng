@@ -25,6 +25,11 @@ run
 rssdldmng
 ```
 
+default config location
+```
+~/.rssdldmng/configuration.json
+```
+
 make service with autostart
 ```
 wget https://raw.githubusercontent.com/alexpayne482/rssdldmng/master/make_service.sh
