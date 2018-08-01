@@ -11,6 +11,7 @@ from rssdldmng.const import (
     CONFIG_FILE,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 # default config
 def_config = {
@@ -44,7 +45,7 @@ def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
     if not os.path.isdir(config_dir):
         if config_dir != get_default_config_dir():
-            print("Fatal Error: Specified configuration directory does not exist {}".format(config_dir))
+            _LOGGER.error("Fatal Error: Specified configuration directory does not exist {}".format(config_dir))
             sys.exit(1)
         else:
             if not os.path.exists(config_dir):
@@ -88,19 +89,30 @@ def create_default_config(config_dir: str, detect_location: bool = True) -> str:
         return config_path
 
     except IOError:
-        print("Unable to create default configuration file", config_path)
+        _LOGGER.error("Unable to create default configuration file {0}".format(config_path))
         return None
 
 
 def load_config_file(config_dir: str):
     config_path = os.path.join(config_dir, CONFIG_FILE)
-
+    #_LOGGER.debug("load_config_file {0}".format(config_path))
     try:
         return json.loads(open(config_path).read())
     
     except IOError:
-        print("Unable to read configuration file", config_path)
+        _LOGGER.error("Unable to read configuration file {0}".format(config_path))
         return None
+
+
+def save_config_file(config, config_dir):
+    config_path = os.path.join(config_dir, CONFIG_FILE)
+    #_LOGGER.debug("save_config_file {0}".format(config_path))
+    try:
+        with open(config_path, 'wt') as config_file:
+            config_file.write(json.dumps(config, sort_keys=True, indent=4))
+    except IOError:
+        _LOGGER.error("Unable to save configuration file {0}".format(config_path))
+    return
 
 
 def ensure_config_file(config_dir: str) -> str:
@@ -108,11 +120,11 @@ def ensure_config_file(config_dir: str) -> str:
     config_path = find_config_file(config_dir)
 
     if config_path is None:
-        print("Unable to find configuration. Creating default one in", config_dir)
+        _LOGGER.warning("Unable to find configuration. Creating default one in {0}".format(config_dir))
         config_path = create_default_config(config_dir)
 
     if config_path is None:
-        print('Error getting configuration path')
+        _LOGGER.error('Error getting configuration path')
         sys.exit(1)
 
     return config_path

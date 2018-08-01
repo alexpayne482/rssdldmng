@@ -26,18 +26,25 @@ def validate_python() -> None:
         print("RSSDld requires at least Python {}.{}.{}".format(*REQUIRED_PYTHON_VER))
         sys.exit(1)
 
-
+g_config_dir = None
 def run_rssdld(config_dir: str, args: argparse.Namespace) -> int:
     """Run rssdld manager"""
-    config_file = config_util.ensure_config_file(config_dir)
+    config_util.ensure_config_file(config_dir)
     _LOGGER.info('Config directory: {0}'.format(config_dir))
-
+    
+    global g_config_dir
+    g_config_dir = config_dir
     config = config_util.load_config_file(config_dir)
     config['dbpath'] = os.path.join(config_dir, 'shows.db')
     config['debug'] = args.debug
     mng = RSSdldMng(config)
 
     return mng.run()
+
+
+def save_config(config):
+    if g_config_dir:
+        config_util.save_config_file(config, g_config_dir)
 
 
 def get_arguments() -> argparse.Namespace:
