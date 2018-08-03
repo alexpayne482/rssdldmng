@@ -64,7 +64,8 @@ class Episode(object):
             self.quality = getQuality(self.title)
             self.episode = getNumbering(self.title)[1]
             self.season = getNumbering(self.title)[0]
-            self.dir = dir.format(seriesname=self.showname, seasonno=self.season)
+            if dir != None:
+                self.dir = dir.format(seriesname=self.showname, seasonno=self.season)
 
         if entries:
             self.__dict__.update(entries['entries'])
@@ -75,9 +76,12 @@ class Episode(object):
         else:
             return "None type"
 
+    def set_dir(self, dir):
+        self.dir = dir.format(seriesname=self.showname, seasonno=self.season)
+
     def filter_showname(self, filters):
             try:
-                if self.showname not in filters['seriesname']:
+                if self.showname not in filters['series']:
                     return False
             except:
                 pass

@@ -4,61 +4,72 @@ import logging
 import math
 import time
 import re
+import json
 from datetime import datetime, timedelta
-
-from rssdldmng.rssdld.downloader import RSSdld
-from rssdldmng.rssdld.episode import IState
 
 _LOGGER = logging.getLogger(__name__)
 
 
+from rssdldmng.rssdld.downloader import RSSdld
+from rssdldmng.rssdld.episode import IState
 from rssdldmng.rssdldapi import RSSdldApiServer
+from rssdldmng.const import (
+    CONFIG_FILE,
+    DB_FILE
+)
 
 
 class RSSdldMng:
 
-    def __init__(self, config):
+    def __init__(self, config_dir):
         """Initialize new RSS Download Manager object."""
-        self.config = config # type: dict
-        self.downloader = None # type: RSSdld
+        self.config_dir = os.path.abspath(config_dir)
+
+        self.config_file = os.path.join(self.config_dir, CONFIG_FILE)
+        self.db_file = os.path.join(self.config_dir, DB_FILE)
+
+        self.config = self.load_config()
+        self.downloader = None
+        self.http_server = None
+
+
+    def load_config(self):
+        try:
+            return json.loads(open(self.config_file).read())
+        except IOError:
+            _LOGGER.error("Unable to read configuration file {0}".format(self.config_file))
+            return None
+
+
+    def save_config(self, config):
+        try:
+            with open(self.config_file, 'wt') as file:
+                file.write(json.dumps(config, sort_keys=True, indent=4))
+        except IOError:
+            _LOGGER.error("Unable to save configuration file {0}".format(self.config_file))
+        return
 
 
     def run(self):
         try:
             _LOGGER.debug("Starting RSSDld core loop")
-            #RSSdldApi.run(debug=True)
+
+            self.downloader = RSSdld(self.db_file, self.config)
+            self.downloader.start()
+
             self.http_server = RSSdldApiServer(8088, self)
             self.http_server.start()
-            self.run_sync()
+
+            # infinite sleep
+            while True:
+                time.sleep(10)
+
         except KeyboardInterrupt:
             _LOGGER.debug("Stopping RSSDld core loop")
+
             self.http_server.stop()
-            self.stop_sync()
+            self.downloader.stop()
 
-
-    def run_sync(self):
-        self.downloader = RSSdld(self.config['dbpath'], self.config['feeds'], self.config['transmission'], self.config['kodi'])
-
-        feed_poll_interval = self.config['feed_poll_interval']
-        lib_update_interval = self.config['lib_update_interval']
-        last_check_feeds = 0
-        last_check_progress = 0
-
-        while True:
-            if feed_poll_interval > 0 and time.time() - last_check_feeds >= feed_poll_interval:
-                last_check_feeds = time.time()
-                self.check_feeds()
-
-            if lib_update_interval > 0 and time.time() - last_check_progress >= lib_update_interval:
-                last_check_progress = time.time()
-                self.check_progress()
-
-            time.sleep(10)
-
-    def stop_sync(self):
-        if self.downloader:
-            self.downloader.close()
-            self.downloader = None
 
 
     def check_feeds(self):

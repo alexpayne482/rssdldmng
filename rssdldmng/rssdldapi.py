@@ -17,7 +17,7 @@ class RSSdldApiServer(RESTHttpServer):
             r'^/api/status$'   : {'GET': self.get_status, 'media_type': 'application/json'},
         }
         self.manager = mng
-        self.servedir = os.path.join(self.manager.config['cfgdir'], 'www')
+        self.servedir = '.'#os.path.join(self.manager.config['cfgdir'], 'www')
         RESTHttpServer.__init__(self, '', port, self.routes, self.servedir)
 
     def get_config(self, handler):

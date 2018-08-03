@@ -103,14 +103,13 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
         if 'file' not in route:
             return None
         # get file path from self.path
-        #servedir = self.server.servedir
+        #servedir = os.path.join(here, self.server.servedir)
         servedir = here + "/www"
         if route['file'] == '/':
             filepath = servedir + self.path
         else:
             filepath = servedir + route['file']
         return filepath
-
 
 class RESTHttpServer():
     def __init__(self, ip, port, routes = None, servedir = None):
@@ -129,11 +128,8 @@ class RESTHttpServer():
         self.server_thread.start()
         _LOGGER.info('Started HTTP server at {0}'.format(self.server.server_address))
 
-    def waitForThread(self):
-        self.server_thread.join()
-
     def stop(self):
-        _LOGGER.info('Stopping HTTP server')
         self.server.shutdown()
-        self.waitForThread()
+        self.server_thread.join()
+        _LOGGER.info('Stopped HTTP server')
 

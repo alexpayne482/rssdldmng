@@ -15,18 +15,24 @@ _LOGGER = logging.getLogger(__name__)
 
 # default config
 def_config = {
-    "feed_poll_interval": 300,
-    "lib_update_interval": 60,
-    "feeds": [
-        {
-            "uri" : "http://showrss.info/other/all.rss",
-            "download_dir" : "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
-            "filters": {
-                "seriesname": ["Elementary"],
-                "quality": ["720p"]
-            }
-        }
-    ],
+    "feeds": ["http://showrss.info/other/all.rss"],
+    "downloader": {
+        "dir": "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
+        "series": ["Elementary"],
+        "quality": ["720p"],
+        "feed_poll_interval": 300,
+        "lib_update_interval": 60,
+    },
+#    "feeds": [
+#        {
+#            "uri" : "http://showrss.info/other/all.rss",
+#            "download_dir" : "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
+#            "filters": {
+#                "seriesname": ["Elementary"],
+#                "quality": ["720p"]
+#            }
+#        }
+#    ],
     "transmission": {
         "host": 'localhost',
         "port": 9091,

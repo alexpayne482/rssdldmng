@@ -1,11 +1,11 @@
-import sys, os
+import sys, os, time
+import re, json
 import logging
-import re
-import json
 from enum import Enum
-from datetime import datetime, timedelta
-from time import mktime
+
 import feedparser
+
+from ..sthread import ServiceThread
 
 from .showsdb import ShowsDB
 from .kodidb import KodiDB
@@ -14,26 +14,58 @@ from .transmission import Transmission
 
 log = logging.getLogger(__name__)
 
-class RSSdld(object):
+
+class RSSdld(ServiceThread):
     """"
-    A class to read rss feed adn download it's items
+    A class to read rss feed and download it's items
     """
 
-    def __init__(self, db, feeds, transmission, kodi):
+    def __init__(self, db_file, config):
 
-        self.feeds = feeds
-        self.transmission = transmission
-        self.kodi = kodi
+        self.db_file = db_file
+        self.config = config
+        self.feeds = self.config['feeds']
+        self.dconfig = self.config['downloader']
+        self.tconfig = self.config['transmission']
+        self.kconfig = self.config['kodi']
 
-        # init DB
+        self.last_feed_poll = 0
+        self.last_lib_update = 0
+
         self.db = None
         self.tc = None
         self.kd = None
 
-        self.db = ShowsDB(db)
+        ServiceThread.__init__(self)
 
         self.connectTransmission()
         self.connectKodi()
+
+
+    def serve_starting(self):
+        # connect to DB
+        self.db = ShowsDB(self.db_file)
+        # update series filter from Trakt if required
+        if 'series' in self.dconfig and type(self.dconfig['series']) is str:
+            if self.dconfig['series'].startswith('trakt:'):
+                self.dconfig['series'] = self.getTraktShows(self.dconfig['series'].split(':')[1])
+        log.debug('Series filter {0}'.format(self.dconfig['series']))
+        log.info('Started downloader')
+
+
+    def serve(self):
+        #log.info('serve loop')
+        if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_feed_poll >= self.dconfig['feed_poll_interval']:
+            self.last_feed_poll = time.time()
+            self.checkFeeds()
+
+        if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_lib_update >= self.dconfig['feed_poll_interval']:
+            self.last_lib_update = time.time()
+            self.checkProgress()
+
+
+    def serve_stopped(self):
+        log.info('Stopped downloader')
 
 
     def connectTransmission(self):
@@ -41,9 +73,9 @@ class RSSdld(object):
         if self.tc == None:
             try:
                 log.debug('connect to transmission')
-                self.tc = Transmission(self.transmission)
+                self.tc = Transmission(self.tconfig)
             except Exception as e:
-                log.info('connect to transmission failed [{0}]'.format(e))
+                log.warn('connect to transmission failed [{0}]'.format(e))
                 self.tc = None
                 return False
         return True
@@ -54,51 +86,67 @@ class RSSdld(object):
         if self.kd == None:
             try:
                 log.debug('connect to kodi')
-                self.kd = KodiDB(self.kodi)
+                self.kd = KodiDB(self.kconfig)
             except Exception as e:
-                log.info('connect to kodi failed [{0}]'.format(e))
+                log.warn('connect to kodi failed [{0}]'.format(e))
                 self.kd = None
                 return False
         return True
 
-
-    def close(self):
-        self.db.close()
-
+    def getTraktShows(slef, username):
+        shows = []
+        try:
+            import trakt.users
+            u = trakt.users.User(username)
+            if u:
+                for s in u.watchlist_shows:
+                    if type(s) is trakt.tv.TVShow:
+                        shows.append(s.title)
+        except Exception as e:
+            log.warn('connect to trakt failed [{0}]'.format(e))
+        return shows
 
     def getFeedEpisodes(self, feed):
-        pfeed = feedparser.parse(feed['uri'])
+        pfeed = feedparser.parse(feed)
         items = []
-        for item in pfeed["items"]:
-            ep = Episode(item, feed['download_dir'])
-            if ep.filter(feed['filters']):
-                items.append(ep)
+        for item in pfeed['items']:
+            items.append(Episode(item))
         return items
 
+    def checkFilter(self, ep):
+        if 'series' in self.dconfig and self.dconfig['series']:
+            if ep.showname not in self.dconfig['series']:
+                return False
+        if 'quality' in self.dconfig and self.dconfig['quality']:
+            if ep.quality not in self.dconfig['quality']:
+                return False
+        return True
 
     def checkFeeds(self):
         # check rss feeds for new items
         log.debug("check rss and add new items to db")
-        new = 0
-        existing = 0
         for feed in self.feeds:
             for ep in self.getFeedEpisodes(feed):
+                if not self.checkFilter(ep):
+                    log.debug('skipped   : %s', ep)
+                    continue
                 dbep = self.db.getEpisode(ep.hash)
                 if not dbep:
                     ep.state = IState.NEW.value
+                    ep.set_dir(self.config['downloader']['dir'])
                     # TODO: ep.date = now()
                     dbep = self.db.addEpisode(ep)
-                    new += 1
                     log.debug('add to db : %s', dbep)
                 else:
-                    existing += 1
                     log.debug('existing  : %s', dbep)
-        log.info('checked rss feeds: %d new items, %d exiting items', new, existing)
 
 
     def checkProgress(self):
-        if not self.connectTransmission(): return
+        self.connectTransmission()
         self.connectKodi()
+
+        if self.tc == None:
+            return
 
         # add new items in transmission
         log.debug("check new items and add them to transmission")
