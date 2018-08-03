@@ -71,32 +71,11 @@ class RSSdldMng:
             self.downloader.stop()
 
 
-
-    def check_feeds(self):
-        if self.downloader:
-            _LOGGER.debug("== checking feeds ...")
-            self.downloader.checkFeeds()
-            _LOGGER.debug("== checking feeds ... done")
-
-
-    def check_progress(self):
-        if self.downloader:
-            _LOGGER.debug("== checking progress ...")
-            self.downloader.checkProgress()
-            _LOGGER.debug("== checking progress ... done")
-
-
-    def dump_db_items(self):
-        if self.downloader:
-            self.downloader.dumpDB()
-            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7)):
-                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(ep.showname, ep.season, ep.episode, 
-                    IState(ep.state).name, ep.title, ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
-
     def get_latest(self):
         if self.downloader:
             return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7))
         return []
+
 
     def get_status(self):
         new = 0
@@ -117,4 +96,11 @@ class RSSdldMng:
             return { "new": new, "downloading" : downloading, "available": available }
         return "NA"
 
+
+    def dump_db_items(self):
+        if self.downloader:
+            self.downloader.dumpDB()
+            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7)):
+                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(ep.showname, ep.season, ep.episode, 
+                    IState(ep.state).name, ep.title, ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
 

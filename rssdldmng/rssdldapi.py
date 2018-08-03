@@ -35,9 +35,8 @@ class RSSdldApiServer(RESTHttpServer):
     def set_shows(self, handler):
         shows = handler.get_payload()
         _LOGGER.debug("set_shows: {0}".format(shows))
-        from rssdldmng.__main__ import save_config
         self.manager.config['feeds'][0]['filters']['seriesname'] = shows
-        save_config(self.manager.config)
+        self.manager.save_config(self.manager.config)
         return 'OK'
 
     def get_latest(self, handler):
