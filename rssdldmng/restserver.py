@@ -4,9 +4,7 @@ from socketserver import ThreadingMixIn
 
 _LOGGER = logging.getLogger(__name__)
 
-
 here = os.path.dirname(os.path.realpath(__file__))
-
 
 # exists only in python 3.7
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
@@ -31,7 +29,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
         self.handle_method('DELETE')
 
     def get_payload(self):
-        payload_len = int(self.headers.getheader('content-length', 0))
+        payload_len = int(self.headers.get('content-length', 0))
         payload = self.rfile.read(payload_len)
         payload = json.loads(payload)
         return payload
@@ -39,7 +37,8 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
     def handle_file(self, method, route):
         if method == 'GET':
             try:
-                f = open(os.path.join(here, route['file']))
+                _LOGGER.debug('xhandle file: {0}'.format(self.get_file_path(route)))
+                f = open(self.get_file_path(route), "rb")
                 try:
                     self.send_response(200)
                     if 'media_type' in route:
@@ -48,7 +47,9 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
                     shutil.copyfileobj(f, self.wfile)
                 finally:
                     f.close()
-            except:
+            except Exception as e:
+                _LOGGER.debug('exception  : {0}'.format(e))
+                raise e
                 self.send_response(404)
                 self.end_headers()
                 self.wfile.write('File not found\n'.encode('utf-8'))
@@ -98,12 +99,25 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
                     return route
         return None
 
+    def get_file_path(self, route):
+        if 'file' not in route:
+            return None
+        # get file path from self.path
+        #servedir = self.server.servedir
+        servedir = here + "/www"
+        if route['file'] == '/':
+            filepath = servedir + self.path
+        else:
+            filepath = servedir + route['file']
+        return filepath
+
 
 class RESTHttpServer():
-    def __init__(self, ip, port, routes = None):
+    def __init__(self, ip, port, routes = None, servedir = None):
         _LOGGER.info('Starting HTTP server on port {0}'.format(port))
         self.server = ThreadingHTTPServer((ip,port), RESTRequestHandler)
         self.server.routes = routes
+        self.server.servedir = servedir
 #        self.server.routes = {
 #            r'^/$'          : {'file': 'web/index.html', 'media_type': 'text/html'},
 #            r'^/records$'   : {'GET': get_records, 'media_type': 'application/json'},

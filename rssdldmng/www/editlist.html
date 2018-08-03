@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class "" lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Configure TV Shows list</title>
+
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+  <style>
+    [contenteditable=true]:empty:before{
+      content: attr(placeholder);
+      color: #888;
+    }
+    div {
+      /*border: 1px dashed #AAA;*/
+      padding: 5px;
+    }
+    .table-editable {
+      position: relative;
+    }
+    .table-editable .glyphicon {
+      font-size: 20px;
+    }
+    .table-remove {
+      color: #900;
+      cursor: pointer;
+      top: 4px;
+    }
+    .table-remove:hover {
+      color: #f00;
+    }
+    .table-add {
+      color: #070;
+      cursor: pointer;
+      top: 24px;
+    }
+    .table-add:hover {
+      color: #0b0;
+    }
+    .table-ok {
+      color: #077;
+      cursor: pointer;
+      top: 4px;
+    }
+    .table-ok:hover {
+      color: #0bb;
+    }
+    .new_entry {
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div id="table" class="table-editable">
+      <table class="table">
+        <col width="*">
+        <col width="50">
+        <tr>
+          <th><h3>TV Shows</h3></th>
+          <th><span class="table-add glyphicon glyphicon-plus"></span></th>
+        </tr>
+        <!-- This is our clonable table line -->
+        <tr class="hide">
+          <td><div id="editbox" contenteditable="true" placeholder="Enter show name here..."></div></td>
+          <td>
+            <span class="table-ok glyphicon glyphicon-ok"></span>
+            <span class="table-remove glyphicon glyphicon-remove hide"></span>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <button id="save-btn" class="btn btn-primary">Save Data</button>
+    <p id="save"></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"></script>
+  <script src="utils.js"></script>
+
+  <script type="text/javascript">
+    var log = new Log(true);
+    var rssmng = new RssdldmngService({host: 'localhost', port: '8088', timeout: 2});
+    var $TABLE = $('#table');
+
+    $(document).ready(function() {
+      rssmng.get('/shows', function(shows) {
+        for (var i = 0; i < shows.length; i++) {
+          var $clone = $TABLE.find('tr.hide').clone(true).removeClass('hide table-line');
+          $clone.find('.table-ok').addClass('hide');
+          $clone.find('.table-remove').removeClass('hide');
+          $clone.find('#editbox').attr('contenteditable', 'false');
+          $clone.find('#editbox').text(shows[i]);
+          $TABLE.find('table').append($clone);
+        }
+      });
+    });
+
+    $('.table-add').click(function () {
+      var $clone = $TABLE.find('tr.hide').clone(true).removeClass('hide table-line');
+      $TABLE.find('table').append($clone);
+    });
+    $('#editbox').on('keydown', function(e) {
+      if(e.keyCode == 13)
+      {
+        $(this).parents('tr').find('.table-ok').addClass('hide');
+        $(this).parents('tr').find('.table-remove').removeClass('hide');
+        $(this).parents('tr').find('#editbox').attr('contenteditable', 'false');
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            e.returnValue = false;
+        }
+      }
+    });
+    $('.table-ok').click(function () {
+      $(this).parents('tr').find('.table-ok').addClass('hide');
+      $(this).parents('tr').find('.table-remove').removeClass('hide');
+      $(this).parents('tr').find('#editbox').attr('contenteditable', 'false');
+    });
+    $('.table-remove').click(function () {
+      $(this).parents('tr').detach();
+    });
+
+    var $SAVETXT = $('#save');
+
+    // A few jQuery helpers for exporting only
+    jQuery.fn.pop = [].pop;
+    jQuery.fn.shift = [].shift;
+
+    $('#save-btn').click(function () {
+      var $rows = $TABLE.find('tr:not(:hidden)');
+
+      var shows = [];
+      $rows.each(function () {
+        var $td = $(this).find('td');
+        if ($td.eq(0).text() != '' && $td.find('#editbox').attr('contenteditable') == 'false') {
+          shows.push($td.eq(0).text())
+        }
+      });
+
+      // Output the result
+      $SAVETXT.text(JSON.stringify(shows));
+      rssmng.put('/setshows', shows);
+    });
+  </script>
+</body>
+
+</html>

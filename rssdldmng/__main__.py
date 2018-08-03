@@ -37,6 +37,7 @@ def run_rssdld(config_dir: str, args: argparse.Namespace) -> int:
     config = config_util.load_config_file(config_dir)
     config['dbpath'] = os.path.join(config_dir, 'shows.db')
     config['debug'] = args.debug
+    config['cfgdir'] = config_dir
     mng = RSSdldMng(config)
 
     return mng.run()
