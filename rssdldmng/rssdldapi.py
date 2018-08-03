@@ -3,8 +3,9 @@ import sys, os, re, json, logging, urllib
 _LOGGER = logging.getLogger(__name__)
 
 import rssdldmng.config as config_util
-from rssdldmng.restserver import RESTHttpServer
-#https://codepen.io/anon/pen/EpEmev
+from rssdldmng.utils.restserver import RESTHttpServer
+
+
 class RSSdldApiServer(RESTHttpServer):
     def __init__(self, port, mng):
         self.routes = {

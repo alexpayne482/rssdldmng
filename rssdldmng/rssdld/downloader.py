@@ -5,7 +5,7 @@ from enum import Enum
 
 import feedparser
 
-from ..sthread import ServiceThread
+from ..utils.sthread import ServiceThread
 
 from .showsdb import ShowsDB
 from .kodidb import KodiDB
