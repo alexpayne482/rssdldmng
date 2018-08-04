@@ -18,11 +18,36 @@ from rssdldmng.const import (
     DB_FILE
 )
 
+# default config
+def_config = {
+    "feeds": ["http://showrss.info/other/all.rss"],
+    "downloader": {
+        "dir": "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
+        "series": ["Elementary"],
+        "quality": ["720p"],
+        "feed_poll_interval": 300,
+        "lib_update_interval": 60,
+    },
+    "transmission": {
+        "host": 'localhost',
+        "port": 9091,
+        "username": "user",
+        "password": "pass"
+    },
+    "kodi": {
+        "host": 'localhost',
+        "port": 8080,
+        "username": "user",
+        "password": "pass"
+    }
+}
 
 class RSSdldMng:
 
     def __init__(self, config_dir):
         """Initialize new RSS Download Manager object."""
+        _LOGGER.info('Config directory: {0}'.format(config_dir))
+
         self.config_dir = os.path.abspath(config_dir)
 
         self.config_file = os.path.join(self.config_dir, CONFIG_FILE)
@@ -34,11 +59,15 @@ class RSSdldMng:
 
 
     def load_config(self):
+        if not os.path.isfile(self.config_file):
+            _LOGGER.warning("Unable to find configuration. Creating default one in {0}".format(self.config_dir))
+            with open(self.config_file, 'wt') as file:
+                file.write(json.dumps(def_config, sort_keys=True, indent=4))
         try:
             return json.loads(open(self.config_file).read())
         except IOError:
-            _LOGGER.error("Unable to read configuration file {0}".format(self.config_file))
-            return None
+            _LOGGER.error("Fatal Error: Unable to read configuration file {0}".format(self.config_file))
+            sys.exit(1)
 
 
     def save_config(self, config):

@@ -9,6 +9,11 @@ Provides restAPI to access local DB, config, status and alter shows list
 
 ## Usage (installing from web)
 
+dependencies
+```
+sudo apt-get install sqlite libsqlite3-dev python3 python3-pip 
+```
+
 install package with pip (not yet published, so does not work)
 ```
 pip install rssdldmng

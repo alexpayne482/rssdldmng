@@ -2,7 +2,6 @@ import sys, os, re, json, logging, urllib
 
 _LOGGER = logging.getLogger(__name__)
 
-import rssdldmng.config as config_util
 from rssdldmng.utils.restserver import RESTHttpServer
 
 

@@ -7,8 +7,6 @@ import platform
 import sys
 import logging
 
-import rssdldmng.config as config_util
-
 from rssdldmng.const import (
     __version__,
     REQUIRED_PYTHON_VER,
@@ -19,8 +17,8 @@ from rssdldmng.const import (
 
 from rssdldmng.rssdldmng import RSSdldMng
 
-
 _LOGGER = logging.getLogger(__name__)
+
 
 def validate_python() -> None:
     """Validate that the right Python version is running."""
@@ -28,26 +26,26 @@ def validate_python() -> None:
         print("RSSDld requires at least Python {}.{}.{}".format(*REQUIRED_PYTHON_VER))
         sys.exit(1)
 
-g_config_dir = None
-def run_rssdld(config_dir: str, args: argparse.Namespace) -> int:
-    """Run rssdld manager"""
-    config_util.ensure_config_file(config_dir)
-    _LOGGER.info('Config directory: {0}'.format(config_dir))
-    
-    global g_config_dir
-    g_config_dir = config_dir
-    #config = config_util.load_config_file(config_dir)
-    #config['dbpath'] = os.path.join(config_dir, 'shows.db')
-    #config['debug'] = args.debug
-    #config['cfgdir'] = config_dir
-    mng = RSSdldMng(config_dir)
 
-    return mng.run()
+def get_default_config_dir() -> str:
+    """Put together the default configuration directory based on the OS."""
+    data_dir = os.getenv('APPDATA') if os.name == "nt" else os.path.expanduser('~')
+    return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def save_config(config):
-    if g_config_dir:
-        config_util.save_config_file(config, g_config_dir)
+def ensure_config_path(config_dir: str) -> None:
+    """Validate the configuration directory."""
+    if not os.path.isdir(config_dir):
+        if config_dir != get_default_config_dir():
+            _LOGGER.error("Fatal Error: Specified configuration directory does not exist {}".format(config_dir))
+            sys.exit(1)
+        else:
+            if not os.path.exists(config_dir):
+                try:
+                    os.makedirs(config_dir)
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
 
 
 def get_arguments() -> argparse.Namespace:
@@ -58,7 +56,7 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         '-c', '--config',
         metavar='path_to_config_dir',
-        default=config_util.get_default_config_dir(),
+        default=get_default_config_dir(),
         help="Directory that contains the RSSDld configuration")
     parser.add_argument(
         '--debug',
@@ -87,7 +85,7 @@ def main() -> int:
 
     # config
     config_dir = os.path.join(os.getcwd(), args.config)
-    config_util.ensure_config_path(config_dir)
+    ensure_config_path(config_dir)
 
     # logging
     FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
@@ -99,7 +97,8 @@ def main() -> int:
     logging.getLogger('').addHandler(fh)
 
     # start main loop
-    run_rssdld(config_dir, args)
+    mng = RSSdldMng(config_dir)
+    mng.run()
 
     # return
     return 0

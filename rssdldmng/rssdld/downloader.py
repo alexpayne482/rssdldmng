@@ -38,9 +38,6 @@ class RSSdld(ServiceThread):
 
         ServiceThread.__init__(self)
 
-        self.connectTransmission()
-        self.connectKodi()
-
 
     def serve_starting(self):
         # connect to DB
@@ -54,7 +51,7 @@ class RSSdld(ServiceThread):
 
 
     def serve(self):
-        #log.info('serve loop')
+        # main loop
         if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_feed_poll >= self.dconfig['feed_poll_interval']:
             self.last_feed_poll = time.time()
             self.checkFeeds()
@@ -93,6 +90,8 @@ class RSSdld(ServiceThread):
                 return False
         return True
 
+## login to trakt first
+## python -c "import trakt; trakt.init(store=True)"
     def getTraktShows(slef, username):
         shows = []
         try:

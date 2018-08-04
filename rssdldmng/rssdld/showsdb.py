@@ -6,6 +6,7 @@ from ..pysqlw import pysqlw
 from .episode import Episode
 
 log = logging.getLogger(__name__)
+logging.getLogger("sqlitew").setLevel(logging.WARNING)
 
 class DBO():
     def __init__(self, db_path):
@@ -46,7 +47,7 @@ class ShowsDB(object):
                 .format(table=self.table))
                 db.wrapper.dbc.commit()
 
-    def hasEpisode(self, db, ihash):
+    def hasEpisode(self, ihash, db):
         if db.where('hash', ihash).get(self.table):
             return True
         return False
