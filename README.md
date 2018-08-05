@@ -11,7 +11,7 @@ Provides restAPI to access local DB, config, status and alter shows list
 
 dependencies
 ```
-sudo apt-get install sqlite libsqlite3-dev python3 python3-pip 
+sudo apt-get install sqlite libsqlite3-dev python3 python3-pip
 ```
 
 install package with pip (not yet published, so does not work)
@@ -21,8 +21,8 @@ pip install rssdldmng
 
 install package with pip from archive
 ```
-wget https://github.com/alexpayne482/rssdldmng/releases/download/0.3.1/rssdldmng-0.3.1.tar.gz
-pip install rssdldmng-0.3.1.tar.gz
+wget https://github.com/alexpayne482/rssdldmng/releases/download/0.4.0/rssdldmng-0.4.0.tar.gz
+pip install rssdldmng-0.4.0.tar.gz
 ```
 
 run
