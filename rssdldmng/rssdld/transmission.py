@@ -46,7 +46,7 @@ class Torrent(object):
 class Transmission(object):
     def __init__(self, config):
         self.tc = TC(host=config['host'], port=config['port'], 
-                     username=config['username'], password=config['password'], timeout=2.0)
+                     username=config['username'], password=config['password'], timeout=5.0)
         self.tc('session-stats')
 
     def tcrpc(self, method, **kwargs):
