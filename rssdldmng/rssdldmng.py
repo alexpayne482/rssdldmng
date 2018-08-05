@@ -92,8 +92,12 @@ class RSSdldMng:
             # infinite sleep
             while True:
                 time.sleep(10)
+                if self.downloader.is_stopped():
+                    break
 
         except KeyboardInterrupt:
+            _LOGGER.debug("RSSDld core loop interrupted")
+        finally:
             _LOGGER.debug("Stopping RSSDld core loop")
 
             self.http_server.stop()

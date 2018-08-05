@@ -15,6 +15,9 @@ class ServiceThread(Thread):
         self.daemon = True
 
 
+    def is_stopped(self):
+        return self.__is_stopped.is_set()
+
     def start(self):
         Thread.start(self)
 

@@ -127,7 +127,7 @@ class RSSdld(ServiceThread):
         for feed in self.feeds:
             for ep in self.getFeedEpisodes(feed):
                 if not self.checkFilter(ep):
-                    log.debug('skipped   : %s', ep)
+                    log.debug('skipped f : %s', ep)
                     continue
                 dbep = self.db.getEpisode(ep.hash)
                 if not dbep:
@@ -150,8 +150,13 @@ class RSSdld(ServiceThread):
         # add new items in transmission
         log.debug("check new items and add them to transmission")
         for ep in self.db.getEpisodes(IState.NEW.value):
+            # if item already in kodi, skip it
+            if self.kd and self.kd.getVideo(ep.showname, ep.season, ep.episode):
+                log.debug('in library : %s', ep)
+                self.db.updateEpisodeState(ep, IState.AVAILABLE.value)
+                continue
+            # download item if not already downloading
             tcitem = self.tc.get(ep.hash)
-            #log.debug('tc : %s', tcitem)
             if not tcitem:
                 self.tc.add(ep.link, ep.dir)
                 log.debug('add to tr : %s', ep)
@@ -177,7 +182,8 @@ class RSSdld(ServiceThread):
                         # update state to UPDATING
                         self.db.updateEpisodeState(ep, IState.UPDATING.value)
             else:
-                log.debug('transmission item not found: %s', ep.hash)
+                self.tc.add(ep.link, ep.dir)
+                log.debug('add to tr : %s', ep)
 
         if self.kd == None: return
 

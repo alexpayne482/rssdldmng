@@ -60,7 +60,7 @@ class Transmission(object):
         log.debug('get %s', hash)
         rsp = self.tcrpc('torrent-get', ids=hash, fields=['name', 'status', 'hashString', 'eta', 'rateDownload', 'leftUntilDone', 'totalSize'])
         try:
-            if rsp['torrents']:
+            if rsp and rsp['torrents']:
                 log.debug(rsp)
                 return Torrent(rsp['torrents'][0])
         except KeyError: pass
@@ -68,10 +68,10 @@ class Transmission(object):
 
     def add(self, magnet, download_dir):
         log.debug('add torrent %s in %s', magnet, download_dir)
-        rsp = self.tcrpc('torrent-add', filename=magnet, download_dir=download_dir, paused=True)
+        rsp = self.tcrpc('torrent-add', filename=magnet, download_dir=download_dir, paused=False)
         log.debug(rsp)
         try:
-            if rsp['torrent-added']:
+            if rsp and rsp['torrent-added']:
                 return True
         except KeyError: pass
         return False
