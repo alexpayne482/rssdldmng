@@ -15,12 +15,14 @@ from rssdldmng.rssdld.episode import IState
 from rssdldmng.rssdldapi import RSSdldApiServer
 from rssdldmng.const import (
     CONFIG_FILE,
-    DB_FILE
+    DB_FILE,
+    API_PORT
 )
 
 # default config
 def_config = {
     "feeds": ["http://showrss.info/other/all.rss"],
+    "apiport": API_PORT,
     "downloader": {
         "dir": "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
         "series": ["Elementary"],
@@ -86,7 +88,7 @@ class RSSdldMng:
             self.downloader = RSSdld(self.db_file, self.config)
             self.downloader.start()
 
-            self.http_server = RSSdldApiServer(8088, self)
+            self.http_server = RSSdldApiServer(self.config.get('apiport', API_PORT), self)
             self.http_server.start()
 
             # infinite sleep
@@ -104,18 +106,18 @@ class RSSdldMng:
             self.downloader.stop()
 
 
-    def get_latest(self):
+    def get_latest(self, days=7):
         if self.downloader:
-            return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7))
+            return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days))
         return []
 
 
-    def get_status(self):
+    def get_status(self, days):
         new = 0
         downloading = 0
         available = 0
         if self.downloader:
-            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7)):
+            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days)):
                 if ep.state <= IState.NEW.value:
                     new += 1
                 elif ep.state < IState.AVAILABLE.value:

@@ -43,10 +43,8 @@ class RSSdld(ServiceThread):
         # connect to DB
         self.db = ShowsDB(self.db_file)
         # update series filter from Trakt if required
-        if 'series' in self.dconfig and type(self.dconfig['series']) is str:
-            if self.dconfig['series'].startswith('trakt:'):
-                self.dconfig['series'] = self.getTraktShows(self.dconfig['series'].split(':')[1])
-        log.debug('Series filter {0}'.format(self.dconfig['series']))
+        self.checkFilters()
+
         log.info('Started downloader')
 
 
@@ -92,6 +90,8 @@ class RSSdld(ServiceThread):
 
 ## login to trakt first
 ## python -c "import trakt; trakt.init(store=True)"
+## currently pytrackt is not working with PIN auth, waiting for fix
+## should return trakt watchlist
     def getTraktShows(slef, username):
         shows = []
         try:
@@ -100,7 +100,7 @@ class RSSdld(ServiceThread):
             if u:
                 for s in u.watchlist_shows:
                     if type(s) is trakt.tv.TVShow:
-                        shows.append(s.title)
+                        shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
         except Exception as e:
             log.warn('connect to trakt failed [{0}]'.format(e))
         return shows
@@ -201,6 +201,16 @@ class RSSdld(ServiceThread):
                 log.debug('not found : %s', ep)
                 #trigger another lib update
                 self.kd.updateLibPath(ep.dir)
+
+
+    def checkFilters(self):
+        if 'series' in self.dconfig and type(self.dconfig['series']) is str:
+            if self.dconfig['series'].startswith('trakt:'):
+                traktcfg = self.dconfig['series'].split(':')[1:]
+                self.dconfig['series'] = self.getTraktShows(traktcfg[0])
+
+        log.debug('Series  filter {0}'.format(self.dconfig['series']))
+        log.debug('Quality filter {0}'.format(self.dconfig['quality']))
 
 
     def dumpDB(self):

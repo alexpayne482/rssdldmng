@@ -4,7 +4,7 @@ import sys
 # Versioning
 MAJOR_VERSION = 0
 MINOR_VERSION = 4
-PATCH_VERSION = '0'
+PATCH_VERSION = '2'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 
@@ -15,4 +15,5 @@ APPNAME = 'rssdldmng'
 CONFIG_DIR_NAME = '.{}'.format(APPNAME)
 CONFIG_FILE = 'configuration.json'
 DB_FILE = 'shows.db'
+API_PORT = 8088
 DEFAULT_LOG_FILE = '{}.log'.format(APPNAME)

@@ -27,7 +27,10 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
         self.handle_method('PUT')
     def do_DELETE(self):
         self.handle_method('DELETE')
-
+    def end_headers (self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        BaseHTTPRequestHandler.end_headers(self)
+        
     def get_payload(self):
         payload_len = int(self.headers.get('content-length', 0))
         payload = self.rfile.read(payload_len)

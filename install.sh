@@ -14,4 +14,4 @@ pip install ./dist/$(ls -tR . | grep .tar.gz | head -n 1)
 cd $CWD
 
 # install as a service
-$DIR/make_service.sh
+#$DIR/make_service.sh

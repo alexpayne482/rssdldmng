@@ -77,30 +77,6 @@ class Episode(object):
             return "None type"
 
     def set_dir(self, dir):
-        self.dir = dir.format(seriesname=self.showname, seasonno=self.season)
+        self.dir = dir.format(seriesname=re.sub('[\\/:"*?<>|]+', '', self.showname), seasonno=self.season)
 
-    def filter_showname(self, filters):
-            try:
-                if self.showname not in filters['series']:
-                    return False
-            except:
-                pass
-            return True
-
-    def filter_quality(self, filters):
-            try:
-                if self.quality not in filters['quality']:
-                    return False
-            except:
-                pass
-            return True
-
-    def filter(self, filters):
-        if filters != None:
-            if not self.filter_showname(filters):
-                #log.debug("\t%s", self)
-                return False
-            if not self.filter_quality(filters):
-                return False
-        return True
 
