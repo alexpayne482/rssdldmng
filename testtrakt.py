@@ -6,6 +6,7 @@ FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
 #logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 # do auth: (will create a file ~/pytrakt.json)
+# get info from https://trakt.tv/ -> Settings -> Your API Apps
 # python -c "import trakt; trakt.init(store=True)"
 
 import trakt.users

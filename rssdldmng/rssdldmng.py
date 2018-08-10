@@ -111,6 +111,10 @@ class RSSdldMng:
             return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days))
         return []
 
+    def get_series(self):
+        if self.downloader:
+            return self.downloader.getSeries()
+        return []
 
     def get_status(self, days):
         new = 0

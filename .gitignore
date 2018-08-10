@@ -105,3 +105,6 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
+
+#sublime
+.sublime-workspace

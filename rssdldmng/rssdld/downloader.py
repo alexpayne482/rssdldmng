@@ -32,6 +32,9 @@ class RSSdld(ServiceThread):
         self.last_feed_poll = 0
         self.last_lib_update = 0
 
+        self.traktshows = []
+        self.traktshows_lastupdate = 0
+
         self.db = None
         self.tc = None
         self.kd = None
@@ -42,11 +45,8 @@ class RSSdld(ServiceThread):
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
-        # update series filter from Trakt if required
-        self.checkFilters()
-
         log.info('Started downloader')
-
+        #log.debug('Series  filter {0}'.format(self.getSeries()))
 
     def serve(self):
         # main loop
@@ -92,7 +92,7 @@ class RSSdld(ServiceThread):
 ## python -c "import trakt; trakt.init(store=True)"
 ## currently pytrackt is not working with PIN auth, waiting for fix
 ## should return trakt watchlist
-    def getTraktShows(slef, username):
+    def getTraktShows(self, username):
         shows = []
         try:
             import trakt.users
@@ -105,6 +105,22 @@ class RSSdld(ServiceThread):
             log.warn('connect to trakt failed [{0}]'.format(e))
         return shows
 
+    def getSeries(self):
+        if 'series' not in self.dconfig:
+            return None
+        if type(self.dconfig['series']) is str:
+            if self.dconfig['series'].startswith('trakt:'):
+                if time.time() - self.traktshows_lastupdate >= self.dconfig['feed_poll_interval']:
+                    traktcfg = self.dconfig['series'].split(':')[1:]
+                    self.traktshows = self.getTraktShows(traktcfg[0])
+                    self.traktshows_lastupdate = time.time()
+                series = self.traktshows
+        else:
+            series = self.dconfig['series']
+        #log.debug('Series  filter {0}'.format(series))
+        return series
+
+
     def getFeedEpisodes(self, feed):
         pfeed = feedparser.parse(feed)
         items = []
@@ -112,8 +128,10 @@ class RSSdld(ServiceThread):
             items.append(Episode(item))
         return items
 
+
     def checkFilter(self, ep):
-        if 'series' in self.dconfig and self.dconfig['series']:
+        series = self.getSeries()
+        if series is not None:
             if ep.showname not in self.dconfig['series']:
                 return False
         if 'quality' in self.dconfig and self.dconfig['quality']:
@@ -201,16 +219,6 @@ class RSSdld(ServiceThread):
                 log.debug('not found : %s', ep)
                 #trigger another lib update
                 self.kd.updateLibPath(ep.dir)
-
-
-    def checkFilters(self):
-        if 'series' in self.dconfig and type(self.dconfig['series']) is str:
-            if self.dconfig['series'].startswith('trakt:'):
-                traktcfg = self.dconfig['series'].split(':')[1:]
-                self.dconfig['series'] = self.getTraktShows(traktcfg[0])
-
-        log.debug('Series  filter {0}'.format(self.dconfig['series']))
-        log.debug('Quality filter {0}'.format(self.dconfig['quality']))
 
 
     def dumpDB(self):

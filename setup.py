@@ -9,12 +9,12 @@ import rssdldmng.const as rssdld_const
 PROJECT_NAME = 'RSS Download Manager'
 PROJECT_PACKAGE_NAME = 'rssdldmng'
 PROJECT_LICENSE = 'Apache License 2.0'
-PROJECT_AUTHOR = 'Liviu'
+PROJECT_AUTHOR = 'Alexander Payne'
 PROJECT_COPYRIGHT = ' 2018-{}, {}'.format(dt.now().year, PROJECT_AUTHOR)
-PROJECT_URL = ''
+PROJECT_URL = 'https://github.com/alexpayne482/rssdldmng'
 PROJECT_EMAIL = ''
 
-PROJECT_GITHUB_USERNAME = 'liviuflore'
+PROJECT_GITHUB_USERNAME = 'alexpayne482'
 PROJECT_GITHUB_REPOSITORY = 'rssdldmng'
 
 PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
@@ -22,7 +22,8 @@ GITHUB_PATH = '{}/{}'.format(
     PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
 GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
-DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, rssdld_const.__version__)
+DOWNLOAD_URL = '{}/releases/download/{}-{}.zip'.format(
+    GITHUB_URL, PROJECT_PACKAGE_NAME, rssdld_const.__version__)
 PROJECT_URLS = {
     'Bug Reports': '{}/issues'.format(GITHUB_URL),
 }
