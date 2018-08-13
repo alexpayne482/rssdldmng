@@ -135,6 +135,9 @@ class RSSdld(ServiceThread):
 
 
     def checkFilter(self, ep):
+        # filter out specials ???
+        #if ep.season <= 0 or ep.episode <= 0:
+        #    return False
         series = self.getSeries()
         if series is not None:
             if ep.showname.lower() not in series:
@@ -247,3 +250,13 @@ class RSSdld(ServiceThread):
             #s = json.dumps(ep, default=lambda x: x.__dict__)
             #log.info(s)
         return lst
+
+
+    def updateEpisode(self, ephash, state):
+        dbep = self.db.getEpisode(ephash)
+        if dbep:
+            self.db.updateEpisodeState(dbep, state)
+            if state == IState.AVAILABLE.value and self.tc != None:
+                self.tc.remove(ephash)
+            return True
+        return False

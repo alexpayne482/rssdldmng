@@ -16,6 +16,7 @@ class RSSdldApiServer(RESTHttpServer):
             r'^/api/latest$'        : {'GET': self.get_latest, 'media_type': 'application/json'},
             r'^/api/status$'        : {'GET': self.get_status, 'media_type': 'application/json'},
             r'^/api/watchlist/.*$'  : {'GET': self.get_watchlist, 'media_type': 'application/json'},
+            r'^/api/setepisode$'    : {'PUT': self.set_episode, 'media_type': 'application/json'},
         }
         self.manager = mng
         self.servedir = '.'#os.path.join(self.manager.config['cfgdir'], 'www')
@@ -45,3 +46,13 @@ class RSSdldApiServer(RESTHttpServer):
     def get_watchlist(self, handler):
         username = handler.path.split('/')[-1]
         return self.manager.downloader.getTraktShows(username)
+
+    def set_episode(self, handler):
+        data = handler.get_payload()
+        if 'hash' not in data or 'state' not in data:
+            return 'FAIL [invalid input]'
+        _LOGGER.debug("set_episode {0} state to {1}".format(data['hash'], data['state']))
+        if not self.manager.update_episode(data['hash'], data['state']):
+            return 'FAIL'
+        return 'OK'
+

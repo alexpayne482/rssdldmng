@@ -135,6 +135,10 @@ class RSSdldMng:
             return { "new": new, "downloading" : downloading, "available": available }
         return "NA"
 
+    def update_episode(self, ephash, state):
+        if self.downloader:
+            return self.downloader.updateEpisode(ephash, state)
+        return False
 
     def dump_db_items(self):
         if self.downloader:
