@@ -30,11 +30,14 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
     def end_headers (self):
         self.send_header('Access-Control-Allow-Origin', '*')
         BaseHTTPRequestHandler.end_headers(self)
-        
+
     def get_payload(self):
         payload_len = int(self.headers.get('content-length', 0))
         payload = self.rfile.read(payload_len)
-        payload = json.loads(payload)
+        if type(payload) is str:
+            payload = json.loads(payload)
+        elif type(payload) is bytes:
+            payload = json.loads(payload.decode("utf-8"))
         return payload
 
     def handle_file(self, method, route):
