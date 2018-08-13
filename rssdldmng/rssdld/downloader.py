@@ -13,6 +13,7 @@ from .episode import Episode, IState
 from .transmission import Transmission
 
 log = logging.getLogger(__name__)
+logging.getLogger("trakt.core").setLevel(logging.WARNING)
 
 
 class RSSdld(ServiceThread):
@@ -58,7 +59,6 @@ class RSSdld(ServiceThread):
             self.last_lib_update = time.time()
             self.checkProgress()
 
-
     def serve_stopped(self):
         log.info('Stopped downloader')
 
@@ -88,21 +88,24 @@ class RSSdld(ServiceThread):
                 return False
         return True
 
+
 ## login to trakt first
 ## python -c "import trakt; trakt.init(store=True)"
 ## currently pytrackt is not working with PIN auth, waiting for fix
 ## should return trakt watchlist
-    def getTraktShows(self, username):
+    def getTraktShows(self, username, listname=None):
         shows = []
+        import trakt.users
         try:
-            import trakt.users
-            u = trakt.users.User(username)
-            if u:
-                for s in u.watchlist_shows:
-                    if type(s) is trakt.tv.TVShow:
-                        shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
+            if listname and listname.lower() != 'watchlist':
+                slist = trakt.users.User(username).get_list(listname)
+            else:
+                slist = trakt.users.User(username).watchlist_shows
+            for s in slist:
+                if type(s) is trakt.tv.TVShow:
+                    shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
         except Exception as e:
-            log.warn('connect to trakt failed [{0}]'.format(e))
+            log.warn('cannot get trakt list {0} for user {1} [{2}]'.format(listname, username, e))
         return shows
 
     def getSeries(self):
@@ -112,7 +115,9 @@ class RSSdld(ServiceThread):
             if self.dconfig['series'].startswith('trakt:'):
                 if time.time() - self.traktshows_lastupdate >= self.dconfig['feed_poll_interval']:
                     traktcfg = self.dconfig['series'].split(':')[1:]
-                    self.traktshows = self.getTraktShows(traktcfg[0])
+                    ss = self.getTraktShows(traktcfg[0], traktcfg[1] if len(traktcfg) > 1 else None)
+                    if len(ss) > 0:
+                        self.traktshows = ss
                     self.traktshows_lastupdate = time.time()
                 series = self.traktshows
         else:

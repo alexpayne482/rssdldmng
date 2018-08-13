@@ -36,7 +36,7 @@ REQUIRES = [
     'requests==2.19.1',
     'feedparser>=5.2.1',
     'pysqlite3==0.2.0',
-    'trakt==2.8.0'
+    'trakt==2.8.1'
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, rssdld_const.REQUIRED_PYTHON_VER))
