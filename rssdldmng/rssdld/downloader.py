@@ -137,7 +137,7 @@ class RSSdld(ServiceThread):
     def checkFilter(self, ep):
         series = self.getSeries()
         if series is not None:
-            if ep.showname not in self.dconfig['series']:
+            if ep.showname not in series:
                 return False
         if 'quality' in self.dconfig and self.dconfig['quality']:
             if ep.quality not in self.dconfig['quality']:
