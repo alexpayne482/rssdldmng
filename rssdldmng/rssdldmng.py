@@ -113,7 +113,7 @@ class RSSdldMng:
 
     def get_series(self):
         if self.downloader:
-            return self.downloader.getSeries()
+            return self.downloader.getSeries(True)
         return []
 
     def get_status(self, days):

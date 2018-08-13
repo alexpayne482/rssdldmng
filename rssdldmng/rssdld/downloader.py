@@ -108,12 +108,12 @@ class RSSdld(ServiceThread):
             log.warn('cannot get trakt list {0} for user {1} [{2}]'.format(listname, username, e))
         return shows
 
-    def getSeries(self):
+    def getSeries(self, update=False):
         if 'series' not in self.dconfig:
             return None
         if type(self.dconfig['series']) is str:
             if self.dconfig['series'].startswith('trakt:'):
-                if time.time() - self.traktshows_lastupdate >= self.dconfig['feed_poll_interval']:
+                if update or time.time() - self.traktshows_lastupdate >= self.dconfig['feed_poll_interval']:
                     traktcfg = self.dconfig['series'].split(':')[1:]
                     ss = self.getTraktShows(traktcfg[0], traktcfg[1] if len(traktcfg) > 1 else None)
                     if len(ss) > 0:
