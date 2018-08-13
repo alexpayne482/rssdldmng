@@ -123,7 +123,7 @@ class RSSdld(ServiceThread):
         else:
             series = self.dconfig['series']
         #log.debug('Series  filter {0}'.format(series))
-        return series
+        return [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
 
 
     def getFeedEpisodes(self, feed):
@@ -137,7 +137,7 @@ class RSSdld(ServiceThread):
     def checkFilter(self, ep):
         series = self.getSeries()
         if series is not None:
-            if ep.showname not in series:
+            if ep.showname.lower() not in series:
                 return False
         if 'quality' in self.dconfig and self.dconfig['quality']:
             if ep.quality not in self.dconfig['quality']:
