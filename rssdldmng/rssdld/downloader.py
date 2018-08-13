@@ -55,7 +55,7 @@ class RSSdld(ServiceThread):
             self.last_feed_poll = time.time()
             self.checkFeeds()
 
-        if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_lib_update >= self.dconfig['feed_poll_interval']:
+        if self.dconfig['lib_update_interval'] > 0 and time.time() - self.last_lib_update >= self.dconfig['lib_update_interval']:
             self.last_lib_update = time.time()
             self.checkProgress()
 
