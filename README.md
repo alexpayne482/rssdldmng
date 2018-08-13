@@ -21,8 +21,8 @@ pip install rssdldmng
 
 install package with pip from archive
 ```
-wget https://github.com/alexpayne482/rssdldmng/releases/download/0.4.5/rssdldmng-0.4.5.tar.gz
-pip install rssdldmng-0.4.5.tar.gz
+wget https://github.com/alexpayne482/rssdldmng/releases/download/0.4.6/rssdldmng-0.4.6.tar.gz
+pip install rssdldmng-0.4.6.tar.gz
 ```
 
 run
