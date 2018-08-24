@@ -14,6 +14,7 @@ class IState(Enum):
     DOWNLOADING = 3
     UPDATING = 4
     AVAILABLE = 5
+    WATCHED = 6
 
 def getQuality(title):
     if '480p' in title:

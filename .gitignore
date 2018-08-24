@@ -2,7 +2,7 @@ config/*
 
 # Hide sublime text stuff
 #*.sublime-project
-#*.sublime-workspace
+*.sublime-workspace
 
 # Hide some OS X stuff
 .DS_Store
@@ -105,6 +105,3 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
-
-#sublime
-.sublime-workspace

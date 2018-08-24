@@ -11,9 +11,9 @@ from .showsdb import ShowsDB
 from .kodidb import KodiDB
 from .episode import Episode, IState
 from .transmission import Transmission
+from .trakt import Trakt
 
 log = logging.getLogger(__name__)
-logging.getLogger("trakt.core").setLevel(logging.WARNING)
 
 
 class RSSdld(ServiceThread):
@@ -25,6 +25,7 @@ class RSSdld(ServiceThread):
 
         self.db_file = db_file
         self.config = config
+
         self.feeds = self.config['feeds']
         self.dconfig = self.config['downloader']
         self.tconfig = self.config['transmission']
@@ -33,12 +34,14 @@ class RSSdld(ServiceThread):
         self.last_feed_poll = 0
         self.last_lib_update = 0
 
-        self.traktshows = []
-        self.traktshows_lastupdate = 0
-
         self.db = None
         self.tc = None
         self.kd = None
+
+        self.trakt = self.config['trakt'] if 'trakt' in self.config else {}
+        self.tk = None
+
+        self.series = None
 
         ServiceThread.__init__(self)
 
@@ -46,6 +49,9 @@ class RSSdld(ServiceThread):
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
+        if 'username' in self.trakt:
+            self.tk = Trakt(self.trakt['username'], self.trakt['list'] if 'list' in self.trakt else None)
+        self.updateSeries()
         log.info('Started downloader')
         #log.debug('Series  filter {0}'.format(self.getSeries()))
 
@@ -53,6 +59,7 @@ class RSSdld(ServiceThread):
         # main loop
         if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_feed_poll >= self.dconfig['feed_poll_interval']:
             self.last_feed_poll = time.time()
+            self.updateSeries()
             self.checkFeeds()
 
         if self.dconfig['lib_update_interval'] > 0 and time.time() - self.last_lib_update >= self.dconfig['lib_update_interval']:
@@ -63,6 +70,24 @@ class RSSdld(ServiceThread):
         log.info('Stopped downloader')
 
 
+    def updateSeries(self):
+        if 'series' not in self.dconfig and not self.tk:
+            return None
+
+        series = []
+        if self.tk:
+            series.extend(self.tk.getShows())
+        if 'series' in self.dconfig:
+            series.extend(self.dconfig['series'])
+        series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
+        series = list(set(series))
+
+        log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
+        self.series = series
+
+        return series
+
+
     def connectTransmission(self):
         # connect to transmission
         if self.tc == None:
@@ -70,7 +95,8 @@ class RSSdld(ServiceThread):
                 log.debug('connect to transmission')
                 self.tc = Transmission(self.tconfig)
             except Exception as e:
-                log.warn('connect to transmission failed [{0}]'.format(e))
+                log.warn('FAILED to connect to transmission')
+                log.debug('exception [{0}]'.format(e))
                 self.tc = None
                 return False
         return True
@@ -83,47 +109,11 @@ class RSSdld(ServiceThread):
                 log.debug('connect to kodi')
                 self.kd = KodiDB(self.kconfig)
             except Exception as e:
-                log.warn('connect to kodi failed [{0}]'.format(e))
+                log.warn('FAILED to connect to kodi')
+                log.debug('exception [{0}]'.format(e))
                 self.kd = None
                 return False
         return True
-
-
-## login to trakt first
-## python -c "import trakt; trakt.init(store=True)"
-## currently pytrackt is not working with PIN auth, waiting for fix
-## should return trakt watchlist
-    def getTraktShows(self, username, listname=None):
-        shows = []
-        import trakt.users
-        try:
-            if listname and listname.lower() != 'watchlist':
-                slist = trakt.users.User(username).get_list(listname)
-            else:
-                slist = trakt.users.User(username).watchlist_shows
-            for s in slist:
-                if type(s) is trakt.tv.TVShow:
-                    shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
-        except Exception as e:
-            log.warn('cannot get trakt list {0} for user {1} [{2}]'.format(listname, username, e))
-        return shows
-
-    def getSeries(self, update=False):
-        if 'series' not in self.dconfig:
-            return None
-        if type(self.dconfig['series']) is str:
-            if self.dconfig['series'].startswith('trakt:'):
-                if update or time.time() - self.traktshows_lastupdate >= self.dconfig['feed_poll_interval']:
-                    traktcfg = self.dconfig['series'].split(':')[1:]
-                    ss = self.getTraktShows(traktcfg[0], traktcfg[1] if len(traktcfg) > 1 else None)
-                    if len(ss) > 0:
-                        self.traktshows = ss
-                    self.traktshows_lastupdate = time.time()
-                series = self.traktshows
-        else:
-            series = self.dconfig['series']
-        #log.debug('Series  filter {0}'.format(series))
-        return [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
 
 
     def getFeedEpisodes(self, feed):
@@ -138,22 +128,25 @@ class RSSdld(ServiceThread):
         # filter out specials ???
         #if ep.season <= 0 or ep.episode <= 0:
         #    return False
-        series = self.getSeries()
-        if series is not None:
-            if ep.showname.lower() not in series:
+        if self.series is not None:
+            if ep.showname.lower() not in self.series:
                 return False
         if 'quality' in self.dconfig and self.dconfig['quality']:
             if ep.quality not in self.dconfig['quality']:
                 return False
         return True
 
+
     def checkFeeds(self):
         # check rss feeds for new items
-        log.debug("check rss and add new items to db")
         for feed in self.feeds:
+            log.info("check rss feed {0}".format(feed))
+            total = 0; added = 0; skipped = 0;
             for ep in self.getFeedEpisodes(feed):
+                total += 1
                 if not self.checkFilter(ep):
                     log.debug('skipped f : %s', ep)
+                    skipped += 1
                     continue
                 dbep = self.db.getEpisode(ep.hash)
                 if not dbep:
@@ -162,19 +155,22 @@ class RSSdld(ServiceThread):
                     # TODO: ep.date = now()
                     dbep = self.db.addEpisode(ep)
                     log.debug('add to db : %s', dbep)
+                    added += 1
                 else:
                     log.debug('existing  : %s', dbep)
-
+            log.info("found {0} items: {1} accepted, {2} rejected".format(total, added, skipped))
 
     def checkProgress(self):
+        log.info("checking progress")
         self.connectTransmission()
         self.connectKodi()
 
         if self.tc == None:
+            self.dumpStats()
             return
 
         # add new items in transmission
-        log.debug("check new items and add them to transmission")
+        log.debug("adding new items to transmission")
         for ep in self.db.getEpisodes(IState.NEW.value):
             # if item already in kodi, skip it
             if self.kd and self.kd.getVideo(ep.showname, ep.season, ep.episode):
@@ -191,7 +187,7 @@ class RSSdld(ServiceThread):
             self.db.updateEpisodeState(ep, IState.DOWNLOADING.value)
 
         # add finished items in kodi
-        log.debug("check downloaded items and add them to kodi")
+        log.debug("check items finished downloading")
         for ep in self.db.getEpisodes(IState.DOWNLOADING.value):
             tcitem = self.tc.get(ep.hash)
             if tcitem:
@@ -214,7 +210,7 @@ class RSSdld(ServiceThread):
         if self.kd == None: return
 
         # mark items found in kodi as available
-        log.debug("check items were added to kodi")
+        log.debug("add items to kodi")
         for ep in self.db.getEpisodes(IState.UPDATING.value):
             ke = self.kd.getVideo(ep.showname, ep.season, ep.episode)
             if ke and ke.file:
@@ -223,16 +219,27 @@ class RSSdld(ServiceThread):
                 self.db.updateEpisodeState(ep, IState.AVAILABLE.value)
                 # remove from transmission
                 self.tc.remove(ep.hash)
+                # set collected in trakt
+                if self.tk:
+                    self.tk.setCollected(ep.showname, ep.season, ep.episode)
             else:
                 log.debug('not found : %s', ep)
-                #trigger another lib update
+                # trigger another lib update
                 self.kd.updateLibPath(ep.dir)
 
+        # ckeck if available items were watched
+        log.debug("mark watched items")
+        for ep in self.db.getEpisodes(IState.AVAILABLE.value):
+            ke = self.kd.getVideo(ep.showname, ep.season, ep.episode)
+            if ke and ke.playcount >= 1:
+                log.debug('watched   : %s', ep)
+                # update state to WATCHED
+                self.db.updateEpisodeState(ep, IState.WATCHED.value)
+                # update watched state in trakt
+                if self.tk:
+                    self.tk.setWatched(ep.showname, ep.season, ep.episode)
 
-    def dumpDB(self):
-        log.debug("get all db items with status")
-        for ep in self.db.getEpisodes():
-            log.info(ep)
+        self.dumpStats()
 
 
     def getDBitems(self, state=-1, published=-1):
@@ -258,5 +265,25 @@ class RSSdld(ServiceThread):
             self.db.updateEpisodeState(dbep, state)
             if state == IState.AVAILABLE.value and self.tc != None:
                 self.tc.remove(ephash)
+            if state == IState.WATCHED.value and self.tk != None:
+                self.tk.setWatched(dbep.showname, dbep.season, dbep.episode)
             return True
         return False
+
+
+    def dumpStats(self):
+        # print stats
+        log.debug("new {0}, downloading {1}, updating {2}, available {3}, watched {4}, invalid {5}".format(
+                len(self.db.getEpisodes(IState.NEW.value)),
+                len(self.db.getEpisodes(IState.DOWNLOADING.value)),
+                len(self.db.getEpisodes(IState.UPDATING.value)),
+                len(self.db.getEpisodes(IState.AVAILABLE.value)),
+                len(self.db.getEpisodes(IState.WATCHED.value)),
+                len(self.db.getEpisodes(IState.NONE.value))
+            ))
+
+
+    def dumpDB(self):
+        log.debug("get all db items with status")
+        for ep in self.db.getEpisodes():
+            log.info(ep)

@@ -16,7 +16,7 @@ def get_arguments():
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-l', '--login', action='store_true', default=False, help='Login to trakt')
     parser.add_argument('-u', '--user', metavar='username', default='', help='Trakt username')
-    parser.add_argument('--list', metavar='list', default='', help='Get specified list from trakt (default is watchlist)')
+    parser.add_argument('--list', metavar='list', default='watchlist', help='Get specified list from trakt (default is watchlist)')
 
     arguments = parser.parse_args()
     return arguments

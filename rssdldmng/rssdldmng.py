@@ -14,6 +14,7 @@ from rssdldmng.rssdld.downloader import RSSdld
 from rssdldmng.rssdld.episode import IState
 from rssdldmng.rssdldapi import RSSdldApiServer
 from rssdldmng.const import (
+    __version__,
     CONFIG_FILE,
     DB_FILE,
     API_PORT
@@ -23,9 +24,13 @@ from rssdldmng.const import (
 def_config = {
     "feeds": ["http://showrss.info/other/all.rss"],
     "apiport": API_PORT,
+    "trakt": {
+        "username": "user",
+        "list": "watchlist"
+    },
     "downloader": {
         "dir": "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
-        "series": ["Elementary"],
+        "series": [],
         "quality": ["720p"],
         "feed_poll_interval": 300,
         "lib_update_interval": 60,
@@ -48,6 +53,7 @@ class RSSdldMng:
 
     def __init__(self, config_dir):
         """Initialize new RSS Download Manager object."""
+        _LOGGER.info('Starting RSSdldMng version {0}'.format(__version__))
         _LOGGER.info('Config directory: {0}'.format(config_dir))
 
         self.config_dir = os.path.abspath(config_dir)
@@ -109,11 +115,6 @@ class RSSdldMng:
     def get_latest(self, days=7):
         if self.downloader:
             return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days))
-        return []
-
-    def get_series(self):
-        if self.downloader:
-            return self.downloader.getSeries(True)
         return []
 
     def get_status(self, days):
