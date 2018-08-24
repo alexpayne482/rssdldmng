@@ -77,6 +77,14 @@ class Episode(object):
         else:
             return "None type"
 
+    def cleaned(self):
+        ep = self
+        del ep.link
+        del ep.uid
+        del ep.showid
+        del ep.hash
+        return ep
+
     def set_dir(self, dir):
         self.dir = dir.format(seriesname=re.sub('[\\/:"*?<>|]+', '', self.showname), seasonno=self.season)
 

@@ -112,9 +112,17 @@ class RSSdldMng:
             self.downloader.stop()
 
 
+    def dump_db_items(self):
+        if self.downloader:
+            self.downloader.dumpDB()
+            for ep in self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * 7)):
+                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(ep.showname, ep.season, ep.episode, 
+                    IState(ep.state).name, ep.title, ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
+
+
     def get_latest(self, days=7):
         if self.downloader:
-            return self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days))
+            return self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * days))
         return []
 
     def get_status(self, days):
@@ -122,7 +130,7 @@ class RSSdldMng:
         downloading = 0
         available = 0
         if self.downloader:
-            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * days)):
+            for ep in self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * days)):
                 if ep.state <= IState.NEW.value:
                     new += 1
                 elif ep.state < IState.AVAILABLE.value:
@@ -140,11 +148,4 @@ class RSSdldMng:
         if self.downloader:
             return self.downloader.updateEpisode(ephash, state)
         return False
-
-    def dump_db_items(self):
-        if self.downloader:
-            self.downloader.dumpDB()
-            for ep in self.downloader.getDBitems(published = (int(datetime.now().timestamp()) - 86400 * 7)):
-                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(ep.showname, ep.season, ep.episode, 
-                    IState(ep.state).name, ep.title, ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
 

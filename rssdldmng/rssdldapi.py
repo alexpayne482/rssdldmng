@@ -12,15 +12,17 @@ class RSSdldApiServer(RESTHttpServer):
             r'^\/(?!api\/).*$'      : {'file': '/', 'media_type': 'text/html'},
             r'^/api/config$'        : {'GET': self.get_config, 'media_type': 'application/json'},
             r'^/api/shows$'         : {'GET': self.get_shows, 'media_type': 'application/json'},
-            #r'^/api/setshows$'      : {'PUT': self.set_shows, 'media_type': 'application/json'},
             r'^/api/latest$'        : {'GET': self.get_latest, 'media_type': 'application/json'},
             r'^/api/status$'        : {'GET': self.get_status, 'media_type': 'application/json'},
+
+            r'^/api/db/.*$'         : {'GET': self.get_db, 'PUT': self.put_db, 'media_type': 'application/json'},
+
+            #r'^/api/setshows$'      : {'PUT': self.set_shows, 'media_type': 'application/json'},
             r'^/api/trakt/list.*$'  : {'GET': self.get_traktlist, 'media_type': 'application/json'},
             r'^/api/test.*$'        : {'GET': self.test, 'media_type': 'application/json'},
-            r'^/api/setepisode$'    : {'PUT': self.set_episode, 'media_type': 'application/json'},
         }
         self.manager = mng
-        self.servedir = '.'#os.path.join(self.manager.config['cfgdir'], 'www')
+        self.servedir = '.' #os.path.join(self.manager.config['cfgdir'], 'www')
         RESTHttpServer.__init__(self, '', port, self.routes, self.servedir)
 
     def get_config(self, handler):
@@ -47,15 +49,12 @@ class RSSdldApiServer(RESTHttpServer):
         return self.manager.get_status(21)
 
     def get_traktlist(self, handler):
-        if not self.manager.downloader:
-            return 'internal error'
-        args = handler.path.split('/')[4:]
-        _LOGGER.debug("args: {0}".format(args))
+        args, params = self.get_args(handler.path, 4)
         if len(args) < 1:
             return 'no trakt username provided'
-        username = args[0]
-        wlist = args[1] if len(args) >= 2 else 'watchlist' 
-        return self.manager.downloader.getTraktShows(username, wlist)
+
+        from rssdldmng.rssdld.trakt import Trakt
+        return Trakt(args[0], args[1] if len(args) >= 2 else 'watchlist').getShows()
 
     def set_episode(self, handler):
         data = handler.get_payload()
@@ -66,7 +65,64 @@ class RSSdldApiServer(RESTHttpServer):
             return 'FAIL'
         return 'OK'
 
+    def get_db(self, handler):
+        if not self.manager.downloader:
+            return 'internal error'
+
+        args, params = self.get_args(handler.path, 3)
+        if len(args) < 1:
+            return 'no action provided'
+
+        if args[0] == 'dump' or args[0] == 'dumpall':
+            state = -1
+            if len(args) >= 2:
+                state = int(args[1])
+            if args[0] == 'dump':
+                return [e.cleaned() for e in self.manager.downloader.getEpisodes(state=state)]
+            else:
+                return self.manager.downloader.getEpisodes(state=state)
+
+        return 'invalid action'
+
+    def put_db(self, handler):
+        if not self.manager.downloader:
+            return 'internal error'
+
+        args, params = self.get_args(handler.path, 3)
+        if len(args) < 1:
+            return 'no action provided'
+
+        if args[0] == 'set':
+            if len(args) < 3:
+                return 'no hash provided or state'
+            if not self.manager.update_episode(args[1], int(args[2])):
+                return 'FAIL'
+            return 'OK'
+
+#            hash = params['hash'] if 'hash' in params else None
+#            showname = params['show'] if 'show' in params else None
+#            season = params['season'] if 'season' in params else -1
+#            episode = params['episode'] if 'episode' in params else -1
+#            return [e.cleaned() for e in self.manager.downloader.getEpisodes(state=state)]
+
+        return 'invalid action'
+
     def test(self, handler):
-        self.manager.downloader.setCollected(None, "elementary", 1, 1)
+        #self.manager.downloader.tk.setCollected(None, "elementary", 1, 1)
         return 'OK'
+
+    def get_args(self, path, index):
+        args = path.split('/')[index:]
+        lastarg = args[-1].split('?')
+        args[-1] = lastarg[0]
+        paramlist = lastarg[1] if len(lastarg) > 1 else None
+        params = {}
+        if paramlist:
+            for p in paramlist.split('&'):
+                if '=' in p:
+                    params[p.split('=')[0]] = p.split('=')[1]
+                else:
+                    params[p] = True
+
+        return (args, params)
 

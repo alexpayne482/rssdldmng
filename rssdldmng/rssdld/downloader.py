@@ -50,7 +50,9 @@ class RSSdld(ServiceThread):
         # connect to DB
         self.db = ShowsDB(self.db_file)
         if 'username' in self.trakt:
-            self.tk = Trakt(self.trakt['username'], self.trakt['list'] if 'list' in self.trakt else None)
+            self.tk = Trakt(self.trakt['username'], 
+                            self.trakt['list'] if 'list' in self.trakt else None,
+                            self.trakt['report'] if 'report' in self.trakt else False)
         self.updateSeries()
         log.info('Started downloader')
         #log.debug('Series  filter {0}'.format(self.getSeries()))
@@ -242,7 +244,7 @@ class RSSdld(ServiceThread):
         self.dumpStats()
 
 
-    def getDBitems(self, state=-1, published=-1):
+    def getEpisodesFull(self, state=-1, published=-1):
         lst = []
         for ep in self.db.getEpisodes(state, published):
             tr = {}
@@ -257,6 +259,10 @@ class RSSdld(ServiceThread):
             #s = json.dumps(ep, default=lambda x: x.__dict__)
             #log.info(s)
         return lst
+
+
+    def getEpisodes(self, state=-1, published=-1):
+        return self.db.getEpisodes(state, published)
 
 
     def updateEpisode(self, ephash, state):

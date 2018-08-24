@@ -82,15 +82,20 @@ class ShowsDB(object):
         return None
 
         # create new db cursor so it could be acceseed from different thread
-    def getEpisodes(self, state=-1, published=-1):
+    def getEpisodes(self, state=-1, published=-1, showname=None, season=-1, episode=-1):
         items = []
         with DBO(self.db_path) as db:
             dbreq = db
             if state >= 0:
-                #rows = self.db.where('state', state).get(self.table)
                 dbreq = dbreq.where('state', state)
             if published >= 0:
                 dbreq = dbreq.where('published', published, '>')
+            if showname is not None:
+                dbreq = dbreq.where('showname', showname)
+            if season >= 0:
+                dbreq = dbreq.where('season', season)
+            if episode >= 0:
+                dbreq = dbreq.where('episode', episode)
 
             rows = dbreq.get(self.table)
             for row in rows:

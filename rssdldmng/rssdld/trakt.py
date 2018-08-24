@@ -11,9 +11,10 @@ logging.getLogger("trakt.core").setLevel(logging.WARNING)
 
 class Trakt():
 
-    def __init__(self, username, slist=None):
+    def __init__(self, username, slist=None, reportprogress=False):
         self.username = username
         self.list = slist
+        self.reportprogress = reportprogress
 
     def getShows(self):
         shows = []
@@ -31,6 +32,8 @@ class Trakt():
         return shows
 
     def setCollected(self, showname, season, episode):
+        if not self.reportprogress:
+            return True
         import trakt.users
         try:
             ep = trakt.tv.TVEpisode(showname, season, episode)
@@ -41,6 +44,8 @@ class Trakt():
         return True
 
     def setWatched(self, showname, season, episode):
+        if not self.reportprogress:
+            return True
         import trakt.users
         try:
             ep = trakt.tv.TVEpisode(showname, season, episode)
