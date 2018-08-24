@@ -10,6 +10,8 @@ from rssdldmng.const import (
     __version__,
 )
 
+log = logging.getLogger(__name__)
+
 def get_arguments():
     parser = argparse.ArgumentParser(
         description="RSS Downloader - Trakt utility")
@@ -38,10 +40,22 @@ def get_trakt_tvlist(username, listname):
             shows.append(s.title)
     return shows
 
+def setWatched(showname, season, episode):
+    import trakt.users
+    try:
+        ep = trakt.tv.TVEpisode(showname, season, episode)
+        ep.mark_as_seen()
+    except (trakt.errors.NotFoundException, Exception) as e:
+        print ('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
+        return False
+    return True
+
 
 def main():
 
     args = get_arguments()
+    #FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
+    #logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
     if not args.user:
         print ('No username provided')
@@ -55,6 +69,8 @@ def main():
     if len(shows) > 0:
         print ('Trakt watchlist ({0} items):'.format(len(shows)))
         print (json.dumps(shows, sort_keys=True, indent=4))
+
+    #setWatched("salvation 2017", 2, 6)
 
 if __name__ == "__main__":
     sys.exit(main())

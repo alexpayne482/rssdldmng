@@ -174,7 +174,7 @@ class RSSdld(ServiceThread):
         for ep in self.db.getEpisodes(IState.NEW.value):
             # if item already in kodi, skip it
             if self.kd and self.kd.getVideo(ep.showname, ep.season, ep.episode):
-                log.debug('in library : %s', ep)
+                log.debug('in library: %s', ep)
                 self.db.updateEpisodeState(ep, IState.AVAILABLE.value)
                 continue
             # download item if not already downloading

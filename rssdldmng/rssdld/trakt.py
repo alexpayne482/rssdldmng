@@ -35,8 +35,8 @@ class Trakt():
         try:
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.add_to_collection()
-        except Exception as e:
-            log.warn('cannot set collected {0} S{1}E{2} [{3}]'.format(showname, season, episode, e))
+        except (trakt.errors.NotFoundException, Exception) as e:
+            print ('WRN: cannot set collected {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True
 
@@ -45,8 +45,8 @@ class Trakt():
         try:
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.mark_as_seen()
-        except Exception as e:
-            log.warn('cannot set watched {0} S{1}E{2} [{3}]'.format(showname, season, episode, e))
+        except (trakt.errors.NotFoundException, Exception) as e:
+            print ('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True
 
