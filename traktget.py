@@ -64,6 +64,8 @@ def main():
     if args.login:
         import trakt
         trakt.init(store=True)
+        print ('Login OK. Info stored in ~/.pytrakt.json')
+        sys.exit(1)
 
     shows = get_trakt_tvlist(args.user, args.list)
     if len(shows) > 0:

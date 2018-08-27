@@ -4,7 +4,8 @@
 ## Description
 
 Parses rss feeds from showrss.info, adds magnet links to transmission, and when download finishes, updates kodi database
-Provides restAPI to access local DB, config, status and alter shows list
+Provides restAPI to access local DB, config, status
+Can get TV show list from Trakt list
 
 
 ## Usage (installing from web)
@@ -39,6 +40,13 @@ make service with autostart
 ```
 wget https://raw.githubusercontent.com/alexpayne482/rssdldmng/master/make_service.sh
 ./make_service.sh
+```
+
+Trakt.tv login before starting the service:
+Follow on screen instrunctions (login data will be stored in $HOME/.pytrakt.json)
+Must be done every 90 days.
+```
+python -c "import trakt; trakt.init(store=True)"
 ```
 
 control the service
