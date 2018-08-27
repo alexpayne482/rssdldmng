@@ -1,1 +1,4 @@
+include *.md
+include LICENSE
+include requirements.txt
 include rssdldmng/www/*.*

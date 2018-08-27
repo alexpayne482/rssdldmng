@@ -1,6 +1,4 @@
-import sys
 import logging
-import feedparser
 
 from ..pysqlw import pysqlw
 from .episode import Episode
@@ -8,13 +6,18 @@ from .episode import Episode
 log = logging.getLogger(__name__)
 logging.getLogger("sqlitew").setLevel(logging.WARNING)
 
+
 class DBO():
+
     def __init__(self, db_path):
         self.db = pysqlw(db_type='sqlite', db_path=db_path)
+
     def __enter__(self):
         return self.db
+
     def __exit__(self, type, value, traceback):
         self.db.close()
+
 
 class ShowsDB(object):
 
@@ -25,10 +28,10 @@ class ShowsDB(object):
 
     def createDB(self):
         with DBO(self.db_path) as db:
-            #db.wrapper.cursor.execute('DROP TABLE `{table}`'.format(table=self.table))
+            # db.wrapper.cursor.execute('DROP TABLE `{table}`'.format(table=self.table))
             try:
                 db.get(self.table)
-            except:
+            except Exception:
                 db.wrapper.cursor.execute(
                     ''' CREATE TABLE `{table}` (
                             `title`     TEXT,
@@ -44,7 +47,7 @@ class ShowsDB(object):
                             `dir`       TEXT,
                             `state`     INTEGER,
                             PRIMARY KEY(`hash`));'''
-                .format(table=self.table))
+                    .format(table=self.table))
                 db.wrapper.dbc.commit()
 
     def hasEpisode(self, ihash, db):
@@ -74,9 +77,9 @@ class ShowsDB(object):
 
     def getEpisode(self, ihash):
         with DBO(self.db_path) as db:
-            #log.debug('find hash %s', ihash)
+            # log.debug('find hash %s', ihash)
             rows = db.where('hash', ihash).get(self.table)
-            #log.debug(rows)
+            # log.debug(rows)
             if rows:
                 return Episode(entries=rows[0])
         return None
@@ -101,4 +104,3 @@ class ShowsDB(object):
             for row in rows:
                 items.append(Episode(entries=row))
         return items
-

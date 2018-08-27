@@ -1,5 +1,7 @@
-import sys, os, time, threading
+import time
+import threading
 from threading import Thread
+
 
 class ServiceThread(Thread):
 
@@ -13,7 +15,6 @@ class ServiceThread(Thread):
         else:
             Thread.__init__(self, target=self.serve_forever)
         self.daemon = True
-
 
     def is_stopped(self):
         return self.__is_stopped.is_set()

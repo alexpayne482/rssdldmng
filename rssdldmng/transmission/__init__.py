@@ -16,15 +16,20 @@ __version__ = '0.7-dev'
 
 import json
 import requests
-from .json_utils import (
-    TransmissionJSONEncoder, TransmissionJSONDecoder, UTC)
+from .json_utils import (TransmissionJSONEncoder, TransmissionJSONDecoder)
 
 CSRF_ERROR_CODE = 409
 UNAUTHORIZED_ERROR_CODE = 401
 CSRF_HEADER = 'X-Transmission-Session-Id'
 
-class BadRequest(Exception): pass
-class Unauthorized(Exception): pass
+
+class BadRequest(Exception):
+    pass
+
+
+class Unauthorized(Exception):
+    pass
+
 
 class Transmission(object):
     def __init__(self, host='localhost', port=9091, path='/transmission/rpc',
@@ -46,7 +51,6 @@ class Transmission(object):
         if username or password:
             self.auth = (username, password)
 
-
     def __call__(self, method, **kwargs):
         """
         Send request to Transmission's RPC interface.
@@ -56,12 +60,13 @@ class Transmission(object):
 
     def _make_request(self, method, **kwargs):
         body = json.dumps(self._format_request_body(method, **kwargs), cls=TransmissionJSONEncoder)
-        response = requests.post(self.url, data=body, headers=self.headers, auth=self.auth, verify=False, timeout=self.timeout)
+        response = requests.post(self.url, data=body, headers=self.headers,
+                                 auth=self.auth, verify=False, timeout=self.timeout)
         if response.status_code == CSRF_ERROR_CODE:
             self.headers[CSRF_HEADER] = response.headers[CSRF_HEADER]
             return self._make_request(method, **kwargs)
         elif response.status_code == UNAUTHORIZED_ERROR_CODE:
-            raise Unauthorized("Check Username and Password");
+            raise Unauthorized("Check Username and Password")
         return response
 
     def _format_request_body(self, method, **kwargs):

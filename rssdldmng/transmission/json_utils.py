@@ -7,6 +7,7 @@ import json
 import calendar
 import datetime
 
+
 class UTC(datetime.tzinfo):
     """UTC"""
 
@@ -34,8 +35,10 @@ TIMESTAMP_KEYS = frozenset(
      'nextAnnounceTime',
      'nextScrapeTime'])
 
+
 def epoch_to_datetime(value):
     return datetime.datetime.fromtimestamp(value, UTC())
+
 
 def datetime_to_epoch(value):
     if isinstance(value, datetime.datetime):
@@ -43,6 +46,7 @@ def datetime_to_epoch(value):
     elif isinstance(value, datetime.date):
         value = datetime.datetime(value.year, value.month, value.day)
         return calendar.timegm(value.utctimetuple())
+
 
 class TransmissionJSONDecoder(json.JSONDecoder):
     def __init__(self, **kwargs):
@@ -55,6 +59,7 @@ class TransmissionJSONDecoder(json.JSONDecoder):
                 value = epoch_to_datetime(value)
             obj[key] = value
         return obj
+
 
 class TransmissionJSONEncoder(json.JSONEncoder):
     def default(self, value):

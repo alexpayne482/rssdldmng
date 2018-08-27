@@ -1,26 +1,24 @@
-import sys, os
 import logging
-import pprint
-import json
-import re
 from enum import Enum
-from time import mktime
 
 from ..transmission import Transmission as TC
+
 
 log = logging.getLogger(__name__)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 log.setLevel(logging.WARNING)
 
+
 class TStatus(Enum):
-    STOPPED       = 0  # Torrent is stopped
-    CHECK_WAIT    = 1  # Queued to check files
-    CHECK         = 2  # Checking files
-    DOWNLOAD_WAIT = 3  # Queued to download
-    DOWNLOAD      = 4  # Downloading
-    SEED_WAIT     = 5  # Queued to seed
-    SEED          = 6  # Seeding
-    ISOLATED      = 7  # Torrent can't find peers
+    STOPPED = 0         # Torrent is stopped
+    CHECK_WAIT = 1      # Queued to check files
+    CHECK = 2           # Checking files
+    DOWNLOAD_WAIT = 3   # Queued to download
+    DOWNLOAD = 4        # Downloading
+    SEED_WAIT = 5       # Queued to seed
+    SEED = 6            # Seeding
+    ISOLATED = 7        # Torrent can't find peers
+
 
 class Torrent(object):
     def __init__(self, map):
@@ -38,14 +36,15 @@ class Torrent(object):
 
     def __str__(self):
         if self.hash is not None:
-            return "{:<32s} {:2d} {:8d} {:%4.2f}% {:8d}".format(self.name, self.status, self.eta, self.progress, self.rateDownload)
+            return "{:<32s} {:2d} {:8d} {:%4.2f}% {:8d}".format(
+                self.name, self.status, self.eta, self.progress, self.rateDownload)
         else:
             return "None type"
 
 
 class Transmission(object):
     def __init__(self, config):
-        self.tc = TC(host=config['host'], port=config['port'], 
+        self.tc = TC(host=config['host'], port=config['port'],
                      username=config['username'], password=config['password'], timeout=5.0)
         self.tc('session-stats')
 
@@ -58,12 +57,14 @@ class Transmission(object):
 
     def get(self, hash):
         log.debug('get %s', hash)
-        rsp = self.tcrpc('torrent-get', ids=hash, fields=['name', 'status', 'hashString', 'eta', 'rateDownload', 'leftUntilDone', 'totalSize'])
+        rsp = self.tcrpc('torrent-get', ids=hash,
+                         fields=['name', 'status', 'hashString', 'eta', 'rateDownload', 'leftUntilDone', 'totalSize'])
         try:
             if rsp and rsp['torrents']:
                 log.debug(rsp)
                 return Torrent(rsp['torrents'][0])
-        except KeyError: pass
+        except KeyError:
+            pass
         return None
 
     def add(self, magnet, download_dir):
@@ -73,7 +74,8 @@ class Transmission(object):
         try:
             if rsp and rsp['torrent-added']:
                 return True
-        except KeyError: pass
+        except KeyError:
+            pass
         return False
 
     def start(self, hash):

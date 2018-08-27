@@ -1,13 +1,12 @@
-import sys, os, time
-import re, json
+import re
 import logging
 
 log = logging.getLogger(__name__)
 logging.getLogger("trakt.core").setLevel(logging.WARNING)
 
 
-## login to trakt first
-## python -c "import trakt; trakt.init(store=True)"
+# login to trakt first
+# python -c "import trakt; trakt.init(store=True)"
 
 class Trakt():
 
@@ -39,7 +38,7 @@ class Trakt():
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.add_to_collection()
         except (trakt.errors.NotFoundException, Exception) as e:
-            print ('WRN: cannot set collected {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
+            print('WRN: cannot set collected {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True
 
@@ -51,8 +50,6 @@ class Trakt():
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.mark_as_seen()
         except (trakt.errors.NotFoundException, Exception) as e:
-            print ('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
+            print('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True
-
-

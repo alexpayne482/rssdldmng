@@ -1,29 +1,29 @@
-import sys, os, re, json, logging, urllib
-
-_LOGGER = logging.getLogger(__name__)
+import logging
 
 from rssdldmng.utils.restserver import RESTHttpServer
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RSSdldApiServer(RESTHttpServer):
     def __init__(self, port, mng):
         self.routes = {
-            r'^/$'                  : {'file': '/index.html', 'media_type': 'text/html'},
-            r'^\/(?!api\/).*$'      : {'file': '/', 'media_type': 'text/html'},
-            r'^/api/config$'        : {'GET': self.get_config, 'media_type': 'application/json'},
-            r'^/api/shows$'         : {'GET': self.get_shows, 'media_type': 'application/json'},
-            r'^/api/latest$'        : {'GET': self.get_latest, 'media_type': 'application/json'},
-            r'^/api/status$'        : {'GET': self.get_status, 'media_type': 'application/json'},
+            r'^/$':                 {'file': '/index.html', 'media_type': 'text/html'},
+            r'^\/(?!api\/).*$':     {'file': '/', 'media_type': 'text/html'},
+            r'^/api/config$':       {'GET': self.get_config, 'media_type': 'application/json'},
+            r'^/api/shows$':        {'GET': self.get_shows, 'media_type': 'application/json'},
+            r'^/api/latest$':       {'GET': self.get_latest, 'media_type': 'application/json'},
+            r'^/api/status$':       {'GET': self.get_status, 'media_type': 'application/json'},
 
-            r'^/api/checkfeed.*$'   : {'PUT': self.put_checkfeed, 'media_type': 'application/json'},
-            r'^/api/db/.*$'         : {'GET': self.get_db, 'PUT': self.put_db, 'media_type': 'application/json'},
+            r'^/api/checkfeed.*$':  {'PUT': self.put_checkfeed, 'media_type': 'application/json'},
+            r'^/api/db/.*$':        {'GET': self.get_db, 'PUT': self.put_db, 'media_type': 'application/json'},
 
-            #r'^/api/setshows$'      : {'PUT': self.put_shows, 'media_type': 'application/json'},
-            r'^/api/trakt/list.*$'  : {'GET': self.get_traktlist, 'media_type': 'application/json'},
-            r'^/api/test.*$'        : {'GET': self.test, 'media_type': 'application/json'},
+            # r'^/api/setshows$':     {'PUT': self.put_shows, 'media_type': 'application/json'},
+            r'^/api/trakt/list.*$': {'GET': self.get_traktlist, 'media_type': 'application/json'},
+            r'^/api/test.*$':       {'GET': self.test, 'media_type': 'application/json'},
         }
         self.manager = mng
-        self.servedir = '.' #os.path.join(self.manager.config['cfgdir'], 'www')
+        self.servedir = '.'  # os.path.join(self.manager.config['cfgdir'], 'www')
         RESTHttpServer.__init__(self, '', port, self.routes, self.servedir)
 
     def get_config(self, handler):
@@ -68,7 +68,6 @@ class RSSdldApiServer(RESTHttpServer):
         res = self.manager.downloader.checkFeed(params['feed'])
         return res
 
-
     def get_db(self, handler):
         if not self.manager.downloader:
             return 'internal error'
@@ -112,7 +111,7 @@ class RSSdldApiServer(RESTHttpServer):
         return 'invalid action'
 
     def test(self, handler):
-        #self.manager.downloader.tk.setCollected(None, "elementary", 1, 1)
+        # self.manager.downloader.tk.setCollected(None, "elementary", 1, 1)
         return 'OK'
 
     def get_args(self, path, index):
@@ -129,4 +128,3 @@ class RSSdldApiServer(RESTHttpServer):
                     params[p] = True
 
         return (args, params)
-

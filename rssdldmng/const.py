@@ -1,5 +1,3 @@
-import os
-import sys
 
 # Versioning
 MAJOR_VERSION = 0

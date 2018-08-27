@@ -10,7 +10,8 @@ class mysqlw(sqltype):
     def connect(self):
         try:
             import MySQLdb
-            self.dbc = MySQLdb.connect(self.args.get('db_host'), self.args.get('db_user'), self.args.get('db_pass'), self.args.get('db_name'))
+            self.dbc = MySQLdb.connect(self.args.get('db_host'), self.args.get('db_user'),
+                                       self.args.get('db_pass'), self.args.get('db_name'))
             self.cursor = self.dbc.cursor(MySQLdb.cursors.DictCursor)
         except Exception as e:
             return False

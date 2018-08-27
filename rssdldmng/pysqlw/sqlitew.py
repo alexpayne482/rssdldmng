@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from sqltype import sqltype
 import logging
+
 log = logging.getLogger(__name__)
 
-from sqltype import sqltype
 
 class sqlitew(sqltype):
     @property
@@ -15,7 +16,7 @@ class sqlitew(sqltype):
             import sqlite3
             self.dbc = sqlite3.connect(self.args.get('db_path'))
             self.dbc.row_factory = self._sqlite_dict_factory
-            #self.dbc.set_trace_callback(print)
+            # self.dbc.set_trace_callback(print)
             self.cursor = self.dbc.cursor()
         except Exception as e:
             log.error('connect to %s failed', self.args.get('db_path'))

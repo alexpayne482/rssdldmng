@@ -1,14 +1,9 @@
 import os
 import sys
 import logging
-import math
 import time
-import re
 import json
-from datetime import datetime, timedelta
-
-_LOGGER = logging.getLogger(__name__)
-
+from datetime import datetime
 
 from rssdldmng.rssdld.downloader import RSSdld
 from rssdldmng.rssdld.episode import IState
@@ -19,6 +14,9 @@ from rssdldmng.const import (
     DB_FILE,
     API_PORT
 )
+
+_LOGGER = logging.getLogger(__name__)
+
 
 # default config
 def_config = {
@@ -49,6 +47,7 @@ def_config = {
     }
 }
 
+
 class RSSdldMng:
 
     def __init__(self, config_dir):
@@ -65,7 +64,6 @@ class RSSdldMng:
         self.downloader = None
         self.http_server = None
 
-
     def load_config(self):
         if not os.path.isfile(self.config_file):
             _LOGGER.warning("Unable to find configuration. Creating default one in {0}".format(self.config_dir))
@@ -77,7 +75,6 @@ class RSSdldMng:
             _LOGGER.error("Fatal Error: Unable to read configuration file {0}".format(self.config_file))
             sys.exit(1)
 
-
     def save_config(self, config):
         try:
             with open(self.config_file, 'wt') as file:
@@ -85,7 +82,6 @@ class RSSdldMng:
         except IOError:
             _LOGGER.error("Unable to save configuration file {0}".format(self.config_file))
         return
-
 
     def run(self):
         try:
@@ -111,18 +107,17 @@ class RSSdldMng:
             self.http_server.stop()
             self.downloader.stop()
 
-
     def dump_db_items(self):
         if self.downloader:
             self.downloader.dumpDB()
-            for ep in self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * 7)):
-                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(ep.showname, ep.season, ep.episode, 
-                    IState(ep.state).name, ep.title, ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
-
+            for ep in self.downloader.getEpisodesFull(published=(int(datetime.now().timestamp()) - 86400 * 7)):
+                _LOGGER.info("{:<24s} S{:02d}E{:02d} {:12s} {:s} {:4d}% {:s}".format(
+                    ep.showname, ep.season, ep.episode, IState(ep.state).name, ep.title,
+                    ep.torrent.progress if ep.torrent else -1, ep.library.dateadded if ep.library else 'none'))
 
     def get_latest(self, days=7):
         if self.downloader:
-            return self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * days))
+            return self.downloader.getEpisodesFull(published=(int(datetime.now().timestamp()) - 86400 * days))
         return []
 
     def get_status(self, days):
@@ -130,7 +125,7 @@ class RSSdldMng:
         downloading = 0
         available = 0
         if self.downloader:
-            for ep in self.downloader.getEpisodesFull(published = (int(datetime.now().timestamp()) - 86400 * days)):
+            for ep in self.downloader.getEpisodesFull(published=(int(datetime.now().timestamp()) - 86400 * days)):
                 if ep.state <= IState.NEW.value:
                     new += 1
                 elif ep.state < IState.AVAILABLE.value:
@@ -140,12 +135,11 @@ class RSSdldMng:
                         downloading += 1
                     elif ep.library.playcount < 1:
                         available += 1
-            #return "{0} new, {1} downloading, {2} available".format(new, downloading, available)
-            return { "new": new, "downloading" : downloading, "available": available }
+            # return "{0} new, {1} downloading, {2} available".format(new, downloading, available)
+            return {"new": new, "downloading": downloading, "available": available}
         return "NA"
 
     def update_episode(self, ephash, state):
         if self.downloader:
             return self.downloader.updateEpisode(ephash, state)
         return False
-

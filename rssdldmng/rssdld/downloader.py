@@ -1,7 +1,6 @@
-import sys, os, time
-import re, json
+import time
+import re
 import logging
-from enum import Enum
 
 import feedparser
 
@@ -45,32 +44,33 @@ class RSSdld(ServiceThread):
 
         ServiceThread.__init__(self)
 
-
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
         if 'username' in self.trakt:
-            self.tk = Trakt(self.trakt['username'], 
+            self.tk = Trakt(self.trakt['username'],
                             self.trakt['list'] if 'list' in self.trakt else None,
                             self.trakt['report'] if 'report' in self.trakt else False)
         self.updateSeries()
         log.info('Started downloader')
-        #log.debug('Series  filter {0}'.format(self.getSeries()))
+        # log.debug('Series  filter {0}'.format(self.getSeries()))
 
     def serve(self):
         # main loop
-        if self.dconfig['feed_poll_interval'] > 0 and time.time() - self.last_feed_poll >= self.dconfig['feed_poll_interval']:
+        ipoll = self.dconfig['feed_poll_interval']
+        iupdate = self.dconfig['lib_update_interval']
+
+        if ipoll > 0 and time.time() - self.last_feed_poll >= ipoll:
             self.last_feed_poll = time.time()
             self.updateSeries()
             self.checkFeeds()
 
-        if self.dconfig['lib_update_interval'] > 0 and time.time() - self.last_lib_update >= self.dconfig['lib_update_interval']:
+        if iupdate > 0 and time.time() - self.last_lib_update >= iupdate:
             self.last_lib_update = time.time()
             self.checkProgress()
 
     def serve_stopped(self):
         log.info('Stopped downloader')
-
 
     def updateSeries(self):
         if 'series' not in self.dconfig and not self.tk:
@@ -89,10 +89,9 @@ class RSSdld(ServiceThread):
 
         return series
 
-
     def connectTransmission(self):
         # connect to transmission
-        if self.tc == None:
+        if self.tc is None:
             try:
                 log.debug('connect to transmission')
                 self.tc = Transmission(self.tconfig)
@@ -103,10 +102,9 @@ class RSSdld(ServiceThread):
                 return False
         return True
 
-
     def connectKodi(self):
         # connect to kodi
-        if self.kd == None:
+        if self.kd is None:
             try:
                 log.debug('connect to kodi')
                 self.kd = KodiDB(self.kconfig)
@@ -117,7 +115,6 @@ class RSSdld(ServiceThread):
                 return False
         return True
 
-
     def getFeedEpisodes(self, feed):
         pfeed = feedparser.parse(feed)
         items = []
@@ -125,10 +122,9 @@ class RSSdld(ServiceThread):
             items.append(Episode(item))
         return items
 
-
     def checkFilter(self, ep):
         # filter out specials ???
-        #if ep.season <= 0 or ep.episode <= 0:
+        # if ep.season <= 0 or ep.episode <= 0:
         #    return False
         if self.series is not None:
             if ep.showname.lower() not in self.series:
@@ -138,16 +134,17 @@ class RSSdld(ServiceThread):
                 return False
         return True
 
-
     def checkFeeds(self):
         # check rss feeds for new items
         for feed in self.feeds:
             self.checkFeed(feed)
 
-
     def checkFeed(self, feed):
+        total = 0
+        added = 0
+        skipped = 0
         log.info("check rss feed {0}".format(feed))
-        total = 0; added = 0; skipped = 0;
+
         for ep in self.getFeedEpisodes(feed):
             total += 1
             if not self.checkFilter(ep):
@@ -164,17 +161,17 @@ class RSSdld(ServiceThread):
                 added += 1
             else:
                 log.debug('existing  : %s', dbep)
+
         strresult = "found {0} items: {1} accepted, {2} rejected".format(total, added, skipped)
         log.info(strresult)
         return strresult
-
 
     def checkProgress(self):
         log.info("checking progress")
         self.connectTransmission()
         self.connectKodi()
 
-        if self.tc == None:
+        if self.tc is None:
             self.dumpStats()
             return
 
@@ -200,14 +197,14 @@ class RSSdld(ServiceThread):
         for ep in self.db.getEpisodes(IState.DOWNLOADING.value):
             tcitem = self.tc.get(ep.hash)
             if tcitem:
-                #log.debug('tc: %s', tcitem)
+                # log.debug('tc: %s', tcitem)
                 if tcitem.progress != 100.0:
                     log.debug('downloadin: %s', ep)
-                    self.tc.start(ep.hash) # might be paused
+                    self.tc.start(ep.hash)  # might be paused
                 else:
                     log.debug('finished  : %s', ep)
                     self.tc.stop(ep.hash)
-                    if self.kd != None:
+                    if self.kd is not None:
                         # add to kodi
                         self.kd.updateLibPath(ep.dir)
                         # update state to UPDATING
@@ -216,7 +213,8 @@ class RSSdld(ServiceThread):
                 self.tc.add(ep.link, ep.dir)
                 log.debug('add to tr : %s', ep)
 
-        if self.kd == None: return
+        if self.kd is None:
+            return
 
         # mark items found in kodi as available
         log.debug("add items to kodi")
@@ -250,39 +248,35 @@ class RSSdld(ServiceThread):
 
         self.dumpStats()
 
-
     def getEpisodesFull(self, state=-1, published=-1):
         lst = []
         for ep in self.db.getEpisodes(state, published):
             tr = {}
             ke = {}
-            if self.tc: 
+            if self.tc:
                 tr = self.tc.get(ep.hash)
             if self.kd:
                 ke = self.kd.getVideo(ep.showname, ep.season, ep.episode)
-            ep.torrent = tr;
-            ep.library = ke;
+            ep.torrent = tr
+            ep.library = ke
             lst.append(ep)
-            #s = json.dumps(ep, default=lambda x: x.__dict__)
-            #log.info(s)
+            # s = json.dumps(ep, default=lambda x: x.__dict__)
+            # log.info(s)
         return lst
-
 
     def getEpisodes(self, state=-1, published=-1):
         return self.db.getEpisodes(state, published)
-
 
     def updateEpisode(self, ephash, state):
         dbep = self.db.getEpisode(ephash)
         if dbep:
             self.db.updateEpisodeState(dbep, state)
-            if state == IState.AVAILABLE.value and self.tc != None:
+            if state is IState.AVAILABLE.value and self.tc is not None:
                 self.tc.remove(ephash)
-            if state == IState.WATCHED.value and self.tk != None:
+            if state is IState.WATCHED.value and self.tk is not None:
                 self.tk.setWatched(dbep.showname, dbep.season, dbep.episode)
             return True
         return False
-
 
     def dumpStats(self):
         # print stats
@@ -294,7 +288,6 @@ class RSSdld(ServiceThread):
                 len(self.db.getEpisodes(IState.WATCHED.value)),
                 len(self.db.getEpisodes(IState.NONE.value))
             ))
-
 
     def dumpDB(self):
         log.debug("get all db items with status")

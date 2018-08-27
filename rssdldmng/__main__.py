@@ -1,17 +1,16 @@
 """Start RSS Download Manager."""
-#from __future__ import print_function
+# from __future__ import print_function
 
 import argparse
 import os
-import platform
 import sys
+import errno
 import logging
 
 from rssdldmng.const import (
     __version__,
     REQUIRED_PYTHON_VER,
     CONFIG_DIR_NAME,
-    CONFIG_FILE,
     DEFAULT_LOG_FILE
 )
 
@@ -43,7 +42,7 @@ def ensure_config_path(config_dir: str) -> None:
             if not os.path.exists(config_dir):
                 try:
                     os.makedirs(config_dir)
-                except OSError as exc: # Guard against race condition
+                except OSError as exc:  # Guard against race condition
                     if exc.errno != errno.EEXIST:
                         raise
 
@@ -73,7 +72,7 @@ def get_arguments() -> argparse.Namespace:
         type=str,
         default='{}'.format(DEFAULT_LOG_FILE),
         help='Log file to write to. If not set, CONFIG/{} is used'.format(DEFAULT_LOG_FILE))
-    
+
     arguments = parser.parse_args()
     return arguments
 

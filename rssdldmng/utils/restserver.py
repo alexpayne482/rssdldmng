@@ -1,10 +1,16 @@
-import sys, os, re, shutil, json, urllib, urllib3, threading, logging
-from http.server import BaseHTTPRequestHandler, HTTPServer#, ThreadingHTTPServer
+import os
+import re
+import shutil
+import json
+import threading
+import logging
+from http.server import BaseHTTPRequestHandler, HTTPServer  # , ThreadingHTTPServer
 from socketserver import ThreadingMixIn
 
 _LOGGER = logging.getLogger(__name__)
 
 here = os.path.dirname(os.path.realpath(__file__))
+
 
 # exists only in python 3.7
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
@@ -19,15 +25,20 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         self.handle_method('HEAD')
+
     def do_GET(self):
         self.handle_method('GET')
+
     def do_POST(self):
         self.handle_method('POST')
+
     def do_PUT(self):
         self.handle_method('PUT')
+
     def do_DELETE(self):
         self.handle_method('DELETE')
-    def end_headers (self):
+
+    def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         BaseHTTPRequestHandler.end_headers(self)
 
@@ -109,7 +120,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
         if 'file' not in route:
             return None
         # get file path from self.path
-        #servedir = os.path.join(here, self.server.servedir)
+        # servedir = os.path.join(here, self.server.servedir)
         servedir = here + "/www"
         if route['file'] == '/':
             filepath = servedir + self.path
@@ -117,16 +128,13 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
             filepath = servedir + route['file']
         return filepath
 
+
 class RESTHttpServer():
-    def __init__(self, ip, port, routes = None, servedir = None):
+    def __init__(self, ip, port, routes=None, servedir=None):
         _LOGGER.info('Starting HTTP server on port {0}'.format(port))
-        self.server = ThreadingHTTPServer((ip,port), RESTRequestHandler)
+        self.server = ThreadingHTTPServer((ip, port), RESTRequestHandler)
         self.server.routes = routes
         self.server.servedir = servedir
-#        self.server.routes = {
-#            r'^/$'          : {'file': 'web/index.html', 'media_type': 'text/html'},
-#            r'^/records$'   : {'GET': get_records, 'media_type': 'application/json'},
-#            r'^/record/'    : {'GET': get_record, 'PUT': set_record, 'DELETE': delete_record, 'media_type': 'application/json'}}
 
     def start(self):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
@@ -138,4 +146,3 @@ class RESTHttpServer():
         self.server.shutdown()
         self.server_thread.join()
         _LOGGER.info('Stopped HTTP server')
-

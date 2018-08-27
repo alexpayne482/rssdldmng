@@ -2,12 +2,16 @@
 # Copyright (C) 2012 Christopher Carter <chris@gibsonsec.org>
 # Licensed under the MIT License.
 
+import os
+import sys
+import logging
 
-import os, sys, logging
 log = logging.getLogger(__name__)
+
 
 def get_script_path():
     return os.path.dirname(os.path.realpath(__file__))
+
 
 class pysqlw:
     """ pysqlw is a meta-wrapper to sqlite and mysql (+ others) modules,
@@ -54,7 +58,7 @@ class pysqlw:
             self._wrapper = __import__('{0}w'.format(kwargs.get('db_type')), globals(), locals())
             # Pull out the wrapper class
             self._wrapper = getattr(self._wrapper, '{0}w'.format(kwargs.get('db_type')))
-        #except ImportError as e:
+        # except ImportError as e:
         #    raise ImportError('Database wrapper "{0}" does not exist or is incorrectly packaged'.format(kwargs.get('db_type')))
         except AttributeError as e:
             raise AttributeError('Database wrapper "{0}" exists but is incorrectly written'.format(kwargs.get('db_type')))
@@ -68,7 +72,7 @@ class pysqlw:
         """Print debugging messages, if enabled"""
         if not self.debug:
             return
-        print ('[ ? ]', ' '.join([str(s) for s in stuff]))
+        print('[ ? ]', ' '.join([str(s) for s in stuff]))
 
     def _connect(self, **kwargs):
         """Instanciate a new wrapper instance"""
@@ -226,8 +230,8 @@ class pysqlw:
             :type data: list or None
             :return: The results of the query
         """
-        #print (query)
-        #print (data)
+        # print (query)
+        # print (data)
         if data is not None:
             self.wrapper.cursor.execute(query, data)
         else:
@@ -282,7 +286,6 @@ class pysqlw:
         if isinstance(table_data, dict) and self._query_type == 'insert':
             keys = list(table_data.keys())
             vals = table_data.values()
-            num = len(table_data)
             for count, key in enumerate(keys):
                 # Wrap column names in backticks.
                 keys[count] = "`{0}`".format(key)

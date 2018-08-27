@@ -1,8 +1,6 @@
-import sys, os
 import logging
 import re
 from enum import Enum
-from datetime import datetime, timedelta
 from time import mktime
 
 log = logging.getLogger(__name__)
@@ -16,6 +14,7 @@ class IState(Enum):
     AVAILABLE = 5
     WATCHED = 6
 
+
 def getQuality(title):
     if '480p' in title:
         return '480p'
@@ -26,21 +25,22 @@ def getQuality(title):
     else:
         return 'na'
 
+
 def getNumbering(title):
     try:
         m = re.search('.*S([0-9]{2})E([0-9]{2}).*', title, re.IGNORECASE)
         return [int(m.group(1)), int(m.group(2))]
-    except:
+    except Exception:
         try:
             m = re.search('.*([0-9]{1,2})x([0-9]{2}).*', title, re.IGNORECASE)
             return [int(m.group(1)), int(m.group(2))]
-        except:
+        except Exception:
             return [0, 0]
 
 
 class Episode(object):
 
-    def __init__(self, item = None, dir = None, **entries):
+    def __init__(self, item=None, dir=None, **entries):
         self.title = None
         self.published = 0
         self.link = None
@@ -65,7 +65,7 @@ class Episode(object):
             self.quality = getQuality(self.title)
             self.episode = getNumbering(self.title)[1]
             self.season = getNumbering(self.title)[0]
-            if dir != None:
+            if dir is not None:
                 self.dir = dir.format(seriesname=self.showname, seasonno=self.season)
 
         if entries:
@@ -73,7 +73,8 @@ class Episode(object):
 
     def __str__(self):
         if self.showname is not None:
-            return "{:<24s} S{:02d}E{:02d} {:6s} {:12s} {:s}".format(self.showname, self.season, self.episode, self.quality, IState(self.state).name, self.title)
+            return "{:<24s} S{:02d}E{:02d} {:6s} {:12s} {:s}".format(
+                self.showname, self.season, self.episode, self.quality, IState(self.state).name, self.title)
         else:
             return "None type"
 
@@ -87,5 +88,3 @@ class Episode(object):
 
     def set_dir(self, dir):
         self.dir = dir.format(seriesname=re.sub('[\\/:"*?<>|]+', '', self.showname), seasonno=self.season)
-
-
