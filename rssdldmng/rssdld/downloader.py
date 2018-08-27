@@ -142,25 +142,32 @@ class RSSdld(ServiceThread):
     def checkFeeds(self):
         # check rss feeds for new items
         for feed in self.feeds:
-            log.info("check rss feed {0}".format(feed))
-            total = 0; added = 0; skipped = 0;
-            for ep in self.getFeedEpisodes(feed):
-                total += 1
-                if not self.checkFilter(ep):
-                    log.debug('skipped f : %s', ep)
-                    skipped += 1
-                    continue
-                dbep = self.db.getEpisode(ep.hash)
-                if not dbep:
-                    ep.state = IState.NEW.value
-                    ep.set_dir(self.config['downloader']['dir'])
-                    # TODO: ep.date = now()
-                    dbep = self.db.addEpisode(ep)
-                    log.debug('add to db : %s', dbep)
-                    added += 1
-                else:
-                    log.debug('existing  : %s', dbep)
-            log.info("found {0} items: {1} accepted, {2} rejected".format(total, added, skipped))
+            self.checkFeed(feed)
+
+
+    def checkFeed(self, feed):
+        log.info("check rss feed {0}".format(feed))
+        total = 0; added = 0; skipped = 0;
+        for ep in self.getFeedEpisodes(feed):
+            total += 1
+            if not self.checkFilter(ep):
+                log.debug('skipped f : %s', ep)
+                skipped += 1
+                continue
+            dbep = self.db.getEpisode(ep.hash)
+            if not dbep:
+                ep.state = IState.NEW.value
+                ep.set_dir(self.config['downloader']['dir'])
+                # TODO: ep.date = now()
+                dbep = self.db.addEpisode(ep)
+                log.debug('add to db : %s', dbep)
+                added += 1
+            else:
+                log.debug('existing  : %s', dbep)
+        strresult = "found {0} items: {1} accepted, {2} rejected".format(total, added, skipped)
+        log.info(strresult)
+        return strresult
+
 
     def checkProgress(self):
         log.info("checking progress")

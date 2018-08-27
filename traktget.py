@@ -54,8 +54,8 @@ def setWatched(showname, season, episode):
 def main():
 
     args = get_arguments()
-    #FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
-    #logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+    FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
+    logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
     if not args.user:
         print ('No username provided')

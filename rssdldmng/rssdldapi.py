@@ -15,9 +15,10 @@ class RSSdldApiServer(RESTHttpServer):
             r'^/api/latest$'        : {'GET': self.get_latest, 'media_type': 'application/json'},
             r'^/api/status$'        : {'GET': self.get_status, 'media_type': 'application/json'},
 
+            r'^/api/checkfeed.*$'   : {'PUT': self.put_checkfeed, 'media_type': 'application/json'},
             r'^/api/db/.*$'         : {'GET': self.get_db, 'PUT': self.put_db, 'media_type': 'application/json'},
 
-            #r'^/api/setshows$'      : {'PUT': self.set_shows, 'media_type': 'application/json'},
+            #r'^/api/setshows$'      : {'PUT': self.put_shows, 'media_type': 'application/json'},
             r'^/api/trakt/list.*$'  : {'GET': self.get_traktlist, 'media_type': 'application/json'},
             r'^/api/test.*$'        : {'GET': self.test, 'media_type': 'application/json'},
         }
@@ -33,7 +34,7 @@ class RSSdldApiServer(RESTHttpServer):
             return 'internal error'
         return self.manager.downloader.getSeries(True)
 
-    def set_shows(self, handler):
+    def put_shows(self, handler):
         if type(self.manager.config['downloader']['series']) is str:
             return 'FAIL'
         shows = handler.get_payload()
@@ -56,14 +57,17 @@ class RSSdldApiServer(RESTHttpServer):
         from rssdldmng.rssdld.trakt import Trakt
         return Trakt(args[0], args[1] if len(args) >= 2 else 'watchlist').getShows()
 
-    def set_episode(self, handler):
-        data = handler.get_payload()
-        if 'hash' not in data or 'state' not in data:
-            return 'FAIL [invalid input]'
-        _LOGGER.debug("set_episode {0} state to {1}".format(data['hash'], data['state']))
-        if not self.manager.update_episode(data['hash'], data['state']):
-            return 'FAIL'
-        return 'OK'
+    def put_checkfeed(self, handler):
+        if not self.manager.downloader:
+            return 'internal error'
+
+        args, params = self.get_args(handler.path, 2)
+        if 'feed' not in params:
+            return 'no feed provided'
+
+        res = self.manager.downloader.checkFeed(params['feed'])
+        return res
+
 
     def get_db(self, handler):
         if not self.manager.downloader:
