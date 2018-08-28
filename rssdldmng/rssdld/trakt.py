@@ -28,6 +28,7 @@ class Trakt():
                     shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
         except Exception as e:
             log.warn('cannot get trakt list {0} for user {1} [{2}]'.format(self.list, self.username, e))
+            shows = []
         return shows
 
     def setCollected(self, showname, season, episode):
