@@ -14,5 +14,7 @@ deploy:
   file:
     - './dist/rssdldmng-$RSSDLDMNG_VERSION.tar.gz'
     - './dist/rssdldmng-$RSSDLDMNG_VERSION-py3-none-any.whl'
+  skip_cleanup: true
   on:
+    tags: true
     repo: alexpayne482/rssdldmng
