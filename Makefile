@@ -22,14 +22,14 @@ init:
 labels:
 	ghlabels -remove -file .github/labels.json
 
-release: incbuildno tar
+release: incbuildno
 	git tag $(shell python setup.py --version)
-	git commit -am "version $(shell python setup.py --version)"
-	git push
 	git push origin $(shell python setup.py --version)
 
 incbuildno:
 	sed -ri 's/(PATCH_VERSION = )([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
+	git commit -am "version $(shell python setup.py --version)"
+	git push
 
 publish: tar
 	python setup.py register
