@@ -1,6 +1,18 @@
 language: python
 python:
-  - 3.5
-  - 3.6
+- 3.5
+- 3.6
 script:
-  - make ci
+- make ci
+
+before_deploy:
+  - RSSDLDMNG_VERSION=`python setup.py --version`
+deploy:
+  provider: releases
+  api_key:
+    secure: sjbYBgyScVtu8mow5R26YMnfPiepeA15t9KHoBrKmJSRlO+D0ZhymaPs6pecDOB7oO8kczdDIzQhZBoqW+yoP5UFHpyM6YiqGRxYdsfoJ2mquKBJXGiPO+1aykvOywvws64vHtHfsW7tScRSMeLAsNukTBOU8aE2fyf5JITArWhm08HGQK4sSLdJMnffq4xl+W/btXETbHWFzEl6ZhAwd8lwZED/N2D5ChlKdW9CLwNPOtzZbWpAuIMS6bgC2445nhGy5qh3EWy7V8/lyv2juArS8FnMUFO+kwQQj4rZqydKiombsorXx8amN1mAiJxjzwvvv8wbePPeIzq0cBivl6fOg+6zGeFxrib5ORL0xtAwjYfNRW6wgIqdvA/OIJSKgku69K2Jua9B44kTpwZPZ6fC85aEFmH741HSW/QUkoT4hG2cAIP1TcHr/ZLDBIAkvt0JCkv32NGldketlX/5gwRJPicXYLCQ8cmPpozJuFTmlBGWaf5bOvwlMP+F9limc1VvBi/piD6i7SMvWFqyDTdOjECsyDpSh631AM3Z/xc8Yx6GE0N1jCFl6bjvqcV/6HfNIW/sdwNCFUet8byoEOCn+mbGFWJPRPoHBSNMVuJWgdj/bfBaU/cWgzqvvioxUcHiSrSZeYKwlWhWd/KKXlLyrCZsKzcgH/dgghJXQ34=
+  file:
+    - './dist/rssdldmng-$RSSDLDMNG_VERSION.tar.gz'
+    - './dist/rssdldmng-$RSSDLDMNG_VERSION-py3-none-any.whl'
+  on:
+    repo: alexpayne482/rssdldmng

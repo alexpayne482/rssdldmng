@@ -2,6 +2,8 @@ PACKAGE=rssdldmng
 
 .PHONY: ci clean coverage init labels publish style test
 
+all: ci tar
+
 ci: init style test
 
 clean:
@@ -23,7 +25,7 @@ labels:
 publish: tar
 	python setup.py register
 	python setup.py upload
-	rm -fr build dist .egg $(PACKAGE).egg-info
+	rm -fr build .egg $(PACKAGE).egg-info
 
 style:
 	flake8 --max-line-length=140 $(PACKAGE)
@@ -37,5 +39,5 @@ tar:
 uninstall:
 	pip uninstall -y $(PACKAGE) || true
 
-install: uninstall tar
+install: ci uninstall tar
 	pip install ./dist/$(shell ls -tR . | grep .tar.gz | head -n 1)

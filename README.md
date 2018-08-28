@@ -76,7 +76,12 @@ install latest release
 pip install ./dist/$(ls -tR . | grep .tar.gz | head -n 1)
 ```
 
-do all: build, install package, install as a service and start it
+run style checks and tests, build package
 ```
-./install.sh
+make all
+```
+
+install latest build
+```
+make install
 ```

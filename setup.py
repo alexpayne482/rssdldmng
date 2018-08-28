@@ -12,7 +12,7 @@ PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'Alexander Payne'
 PROJECT_COPYRIGHT = ' 2018-{}, {}'.format(dt.now().year, PROJECT_AUTHOR)
 PROJECT_URL = 'https://github.com/alexpayne482/rssdldmng'
-PROJECT_EMAIL = ''
+PROJECT_EMAIL = 'alexander.payne.482@gmail.com'
 
 PROJECT_GITHUB_USERNAME = 'alexpayne482'
 PROJECT_GITHUB_REPOSITORY = 'rssdldmng'
