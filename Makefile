@@ -1,4 +1,5 @@
 PACKAGE=rssdldmng
+VERSION=`python setup.py --version`
 
 .PHONY: ci clean coverage init labels publish style test
 
@@ -23,12 +24,13 @@ labels:
 	ghlabels -remove -file .github/labels.json
 
 release: incbuildno
-	git tag $(shell python setup.py --version)
-	git push origin $(shell python setup.py --version)
+	git tag $(VERSION)
+	git push origin $(VERSION)
 
 incbuildno:
 	sed -ri 's/(PATCH_VERSION = )([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
-	git commit -am "version $(shell python setup.py --version)"
+	@echo $(VERSION)
+	git commit -am "version $(VERSION)"
 	git push
 
 publish: tar
@@ -49,4 +51,4 @@ uninstall:
 	pip uninstall -y $(PACKAGE) || true
 
 install: ci uninstall tar
-	pip install ./dist/$(PACKAGE)-$(shell python setup.py --version).tar.gz
+	pip install ./dist/$(PACKAGE)-$(VERSION).tar.gz
