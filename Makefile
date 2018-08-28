@@ -28,10 +28,10 @@ release: incbuildno
 	git push origin $(VERSION)
 
 incbuildno:
-	sed -ri 's/(PATCH_VERSION = )([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
-	@echo $(VERSION)
-	git commit -am "version $(VERSION)"
-	git push
+	@sed -ri 's/(PATCH_VERSION = )([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
+	@echo updating version number to: $(VERSION)
+	@git commit -am "version $(VERSION)"
+	@git push
 
 publish: tar
 	python setup.py register
