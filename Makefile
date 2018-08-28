@@ -25,6 +25,7 @@ labels:
 release: incbuildno tar
 	git tag $(shell python setup.py --version)
 	git commit -am "version $(shell python setup.py --version)"
+	git push
 	git push origin $(shell python setup.py --version)
 
 incbuildno:
