@@ -3,7 +3,7 @@ python:
 - 3.5
 - 3.6
 script:
-- make ci
+- make all
 
 before_deploy:
   - RSSDLDMNG_VERSION=`python setup.py --version`
