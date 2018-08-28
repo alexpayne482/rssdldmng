@@ -29,7 +29,7 @@ release: incbuildno tar
 	git push origin $(shell python setup.py --version)
 
 incbuildno:
-	sed -ri 's/(PATCH_VERSION=)([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
+	sed -ri 's/(PATCH_VERSION = )([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
 
 publish: tar
 	python setup.py register
