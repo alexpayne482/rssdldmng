@@ -22,6 +22,14 @@ init:
 labels:
 	ghlabels -remove -file .github/labels.json
 
+release: incbuildno tar
+	git tag $(shell python setup.py --version)
+	git commit -am "version $(shell python setup.py --version)"
+	git push origin $(shell python setup.py --version)
+
+incbuildno:
+	sed -ri 's/(PATCH_VERSION=)([0-9]+)(.*)/echo "\1$$((\2+1))\3"/ge' rssdldmng/const.py
+
 publish: tar
 	python setup.py register
 	python setup.py upload
@@ -40,4 +48,4 @@ uninstall:
 	pip uninstall -y $(PACKAGE) || true
 
 install: ci uninstall tar
-	pip install ./dist/$(shell ls -tR . | grep .tar.gz | head -n 1)
+	pip install ./dist/$(PACKAGE)-$(shell python setup.py --version).tar.gz
