@@ -103,9 +103,10 @@ class RSSdldMng:
             _LOGGER.debug("RSSDld core loop interrupted")
         finally:
             _LOGGER.debug("Stopping RSSDld core loop")
-
-            self.http_server.stop()
-            self.downloader.stop()
+            if self.http_server:
+                self.http_server.stop()
+            if self.downloader:
+                self.downloader.stop()
 
     def dump_db_items(self):
         if self.downloader:
