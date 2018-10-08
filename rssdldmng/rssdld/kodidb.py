@@ -1,4 +1,5 @@
 import logging
+import re
 from kodipydent import Kodi
 
 
@@ -44,7 +45,8 @@ class KodiDB(object):
             log.debug('get video %s S%02dE%02d', show, season, episode)
             srsp = self.kd.VideoLibrary.GetTVShows()
             for s in srsp['result']['tvshows']:
-                if s['label'].lower().startswith(show.lower()):
+                showname = re.sub('[\\/:"*?<>|]+', '', s["label"])
+                if showname.lower().startswith(show.lower()):
                     log.debug('get video rsp: found show %s', s)
                     ersp = self.kd.VideoLibrary.GetEpisodes(
                             tvshowid=s['tvshowid'], season=season,
