@@ -74,12 +74,15 @@ class RSSdld(ServiceThread):
 
     def updateSeries(self):
         if 'series' not in self.dconfig and not self.tk:
+            log.warn('Faild to update series. Neither Trakt config nor series config exists in configuration file')
             return None
 
         series = []
         if self.tk:
+            log.debug('Start update series from Trakt')
             series.extend(self.tk.getShows())
         if 'series' in self.dconfig:
+            log.debug('Start update series from config file')
             series.extend(self.dconfig['series'])
         series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
         series = list(set(series))
