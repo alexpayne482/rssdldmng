@@ -52,26 +52,15 @@ def get_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="RSS Downloader (RSSDld)")
     parser.add_argument('--version', action='version', version=__version__)
-    parser.add_argument(
-        '-c', '--config',
-        metavar='path_to_config_dir',
-        default=get_default_config_dir(),
-        help="Directory that contains the RSSDld configuration")
-    parser.add_argument(
-        '--debug',
-        action='store_true',
-        default=True,
-        help='Start RSSDld in debug mode')
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        default=False,
-        help="Enable verbose logging to file.")
-    parser.add_argument(
-        '--log-file',
-        type=str,
-        default='{}'.format(DEFAULT_LOG_FILE),
-        help='Log file to write to. If not set, CONFIG/{} is used'.format(DEFAULT_LOG_FILE))
+    parser.add_argument('-c', '--config', default=get_default_config_dir(),
+                                metavar='path_to_config_dir',
+                                help="Directory that contains the RSSDld configuration")
+    parser.add_argument('--debug', action='store_true', default=True,
+                                help='Start RSSDld in debug mode')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+                                help="Enable verbose logging to file.")
+    parser.add_argument('--log-file', type=str, default='{}'.format(DEFAULT_LOG_FILE),
+                                help='Log file to write to. If not set, CONFIG/{} is used'.format(DEFAULT_LOG_FILE))
 
     arguments = parser.parse_args()
     return arguments

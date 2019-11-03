@@ -15,7 +15,7 @@ from .trakt import Trakt
 log = logging.getLogger(__name__)
 
 
-class RSSdld(ServiceThread):
+class Downloader(ServiceThread):
     """"
     A class to read rss feed and download it's items
     """
@@ -29,6 +29,7 @@ class RSSdld(ServiceThread):
         self.dconfig = self.config['downloader']
         self.tconfig = self.config['transmission']
         self.kconfig = self.config['kodi']
+        self.tkconfig = self.config['trakt'] if 'trakt' in self.config else {}
 
         self.last_feed_poll = 0
         self.last_lib_update = 0
@@ -37,7 +38,6 @@ class RSSdld(ServiceThread):
         self.tc = None
         self.kd = None
 
-        self.trakt = self.config['trakt'] if 'trakt' in self.config else {}
         self.tk = None
 
         self.series = None
@@ -47,13 +47,12 @@ class RSSdld(ServiceThread):
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
-        if 'username' in self.trakt:
-            self.tk = Trakt(self.trakt['username'],
-                            self.trakt['list'] if 'list' in self.trakt else None,
-                            self.trakt['report'] if 'report' in self.trakt else False)
-        self.updateSeries()
+        if 'username' in self.tkconfig:
+            self.tk = Trakt(self.tkconfig['username'],
+                            self.tkconfig['list'] if 'list' in self.tkconfig else None,
+                            self.tkconfig['report'] if 'report' in self.tkconfig else False)
+        #self.updateSeries()
         log.info('Started downloader')
-        # log.debug('Series  filter {0}'.format(self.getSeries()))
 
     def serve(self):
         # main loop
@@ -72,6 +71,7 @@ class RSSdld(ServiceThread):
     def serve_stopped(self):
         log.info('Stopped downloader')
 
+
     def updateSeries(self):
         if 'series' not in self.dconfig and not self.tk:
             log.warn('Faild to update series. Neither Trakt config nor series config exists in configuration file')
@@ -79,11 +79,13 @@ class RSSdld(ServiceThread):
 
         series = []
         if self.tk:
-            log.debug('Start update series from Trakt')
+            log.debug('get series from Trakt')
+            # TODO: this should be done async ...
             series.extend(self.tk.getShows())
         if 'series' in self.dconfig:
-            log.debug('Start update series from config file')
+            log.debug('get series from config file')
             series.extend(self.dconfig['series'])
+
         series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
         series = list(set(series))
 

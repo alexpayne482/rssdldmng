@@ -5,9 +5,9 @@ import time
 import json
 from datetime import datetime
 
-from rssdldmng.rssdld.downloader import RSSdld
+from rssdldmng.rssdld.downloader import Downloader
 from rssdldmng.rssdld.episode import IState
-from rssdldmng.rssdldapi import RSSdldApiServer
+from rssdldmng.rssdldapi import ApiServer
 from rssdldmng.const import (
     __version__,
     CONFIG_FILE,
@@ -27,7 +27,7 @@ def_config = {
         "list": "watchlist"
     },
     "downloader": {
-        "dir": "/media/Media/Series/{seriesname}/Season{seasonno:02}/",
+        "dir": "/media/Series/{seriesname}/Season{seasonno:02}/",
         "series": [],
         "quality": ["720p"],
         "feed_poll_interval": 300,
@@ -52,7 +52,7 @@ class RSSdldMng:
 
     def __init__(self, config_dir):
         """Initialize new RSS Download Manager object."""
-        _LOGGER.info('Starting RSSdldMng version {0}'.format(__version__))
+        _LOGGER.info('Starting RDM version {0}'.format(__version__))
         _LOGGER.info('Config directory: {0}'.format(config_dir))
 
         self.config_dir = os.path.abspath(config_dir)
@@ -85,12 +85,12 @@ class RSSdldMng:
 
     def run(self):
         try:
-            _LOGGER.debug("Starting RSSDld core loop")
+            _LOGGER.debug("Starting RDM core loop")
 
-            self.downloader = RSSdld(self.db_file, self.config)
+            self.downloader = Downloader(self.db_file, self.config)
             self.downloader.start()
 
-            self.http_server = RSSdldApiServer(self.config.get('apiport', API_PORT), self)
+            self.http_server = ApiServer(self.config.get('apiport', API_PORT), self)
             self.http_server.start()
 
             # infinite sleep
@@ -100,14 +100,15 @@ class RSSdldMng:
                     break
 
         except KeyboardInterrupt:
-            _LOGGER.debug("RSSDld core loop interrupted")
+            _LOGGER.debug("RDM core loop interrupted")
         finally:
-            _LOGGER.debug("Stopping RSSDld core loop")
+            _LOGGER.debug("Stopping RDM core loop")
             if self.http_server:
                 self.http_server.stop()
             if self.downloader:
                 self.downloader.stop()
 
+    # API actions
     def dump_db_items(self):
         if self.downloader:
             self.downloader.dumpDB()

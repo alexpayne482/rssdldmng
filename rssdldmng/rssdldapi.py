@@ -5,7 +5,7 @@ from rssdldmng.utils.restserver import RESTHttpServer
 _LOGGER = logging.getLogger(__name__)
 
 
-class RSSdldApiServer(RESTHttpServer):
+class ApiServer(RESTHttpServer):
     def __init__(self, port, mng):
         self.routes = {
             r'^/$':                 {'file': '/index.html', 'media_type': 'text/html'},
