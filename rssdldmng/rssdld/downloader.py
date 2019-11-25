@@ -28,8 +28,8 @@ class Downloader(ServiceThread):
         self.feeds = self.config['feeds']
         self.dconfig = self.config['downloader']
         self.tconfig = self.config['transmission']
-        self.kconfig = self.config['kodi']
-        self.tkconfig = self.config['trakt'] if 'trakt' in self.config else {}
+        self.kconfig = self.config['kodi'] if 'kodi' in self.config else None
+        self.tkconfig = self.config['trakt'] if 'trakt' in self.config else None
 
         self.last_feed_poll = 0
         self.last_lib_update = 0
@@ -47,7 +47,7 @@ class Downloader(ServiceThread):
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
-        if 'username' in self.tkconfig:
+        if self.tkconfig:
             self.tk = Trakt(self.tkconfig['username'],
                             self.tkconfig['list'] if 'list' in self.tkconfig else None,
                             self.tkconfig['report'] if 'report' in self.tkconfig else False)
