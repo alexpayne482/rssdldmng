@@ -26,6 +26,8 @@ class Trakt():
             for s in slist:
                 if type(s) is trakt.tv.TVShow:
                     shows.append(re.sub('[\\/:"*?<>|]+', '', s.title))
+        except trakt.errors.TraktException as te:
+            log.warn('connect to trakt exception [{0}]'.format(te))
         except Exception as e:
             log.warn('cannot get trakt list {0} for user {1} [{2}]'.format(self.list, self.username, e))
             shows = []
