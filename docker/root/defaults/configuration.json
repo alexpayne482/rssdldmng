@@ -1,0 +1,24 @@
+{
+    "downloader": {
+        "dir": "/downloads/Shows/{seriesname}/Season{seasonno:02}/",
+        "feed_poll_interval": 1800,
+        "lib_update_interval": 600,
+        "quality": [
+            "720p"
+        ],
+        "series": []
+    },
+    "feeds": [
+        "http://showrss.info/user/xxxx.rss?magnets=true&namespaces=true&name=null&quality=null&re=null"
+    ],
+    "trakt": {
+        "username": "traktuser",
+        "list": "watching"
+    },
+    "transmission": {
+        "host": "localhost",
+        "username": "truser",
+        "password": "trpass",
+        "port": 9091
+    }
+}

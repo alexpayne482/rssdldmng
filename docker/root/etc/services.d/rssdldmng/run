@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv bash
+
+_term() {
+  echo "Caught SIGTERM signal!"
+  $(which python3) -m rssdldmng --exit
+}
+
+        trap _term SIGTERM
+	
+	s6-setuidgid abc $(which python3) -m rssdldmng -c /config &
+
+	wait

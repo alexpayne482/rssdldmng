@@ -8,6 +8,18 @@ Provides restAPI to access local DB, config, status
 Can get TV show list from Trakt list
 
 
+## Usage (installing from web inside docker)
+
+build docker image from github
+```
+docker build --no-cache --pull --rm -t alexpayne/rssdldmng:latest https://github.com/alexpayne482/rssdldmng.git#:docker
+```
+
+build docker image from local repo
+```
+docker build --no-cache --pull --rm -t alexpayne/rssdldmng:latest ./docker
+```
+
 ## Usage (installing from web)
 
 dependencies
