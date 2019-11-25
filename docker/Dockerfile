@@ -8,6 +8,8 @@ LABEL maintainer="alexpayne"
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
+COPY rssdldmng.tar.gz /tmp/rssdldmng.tar.gz
+
 RUN \
  echo "**** install packages ****" && \
  apk add --no-cache \
@@ -50,14 +52,16 @@ RUN \
  tar xf \
 	/tmp/kettu.tar.gz -C \
 	/kettu --strip-components=1 && \
- RSSDLDMNGVERSION=$(curl -sX GET "https://api.github.com/repos/alexpayne482/rssdldmng/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]') && \
- curl -o \
-	/tmp/rssdldmng.tar.gz -L \
-	"https://github.com/alexpayne482/rssdldmng/releases/download/${RSSDLDMNGVERSION}/rssdldmng-${RSSDLDMNGVERSION}.tar.gz" && \
+ if [ ! -f /tmp/rssdldmng.tar.gz ]; then \
+	echo "install rssdldmng from github release" && \
+	RSSDLDMNGVERSION=$(curl -sX GET "https://api.github.com/repos/alexpayne482/rssdldmng/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]') && \
+	curl -o \
+		/tmp/rssdldmng.tar.gz -L \
+		"https://github.com/alexpayne482/rssdldmng/releases/download/${RSSDLDMNGVERSION}/rssdldmng-${RSSDLDMNGVERSION}.tar.gz"; \
+ fi && \
  pip3 install /tmp/rssdldmng.tar.gz && \
  echo "**** cleanup ****" && \
- rm -rf \
-	/tmp/*
+ rm -rf /tmp/*
 
 
 # copy local files
