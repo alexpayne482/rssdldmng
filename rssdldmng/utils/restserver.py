@@ -9,7 +9,7 @@ from socketserver import ThreadingMixIn
 
 _LOGGER = logging.getLogger(__name__)
 
-here = os.path.dirname(os.path.realpath(__file__))
+www = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../www')
 
 
 # exists only in python 3.7
@@ -66,7 +66,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
                     f.close()
             except Exception as e:
                 _LOGGER.debug('exception  : {0}'.format(e))
-                raise e
+                #raise e
                 self.send_response(404)
                 self.end_headers()
                 self.wfile.write('File not found\n'.encode('utf-8'))
@@ -121,17 +121,17 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
             return None
         # get file path from self.path
         # servedir = os.path.join(here, self.server.servedir)
-        servedir = here + "/www"
+        #servedir = here + "/../www"
         if route['file'] == '/':
-            filepath = servedir + self.path
+            filepath = www + self.path
         else:
-            filepath = servedir + route['file']
+            filepath = www + route['file']
         return filepath
 
 
 class RESTHttpServer():
     def __init__(self, ip, port, routes=None, servedir=None):
-        _LOGGER.info('Starting HTTP server on port {0}'.format(port))
+        _LOGGER.info('Starting HTTP server on port {0}, root {1}'.format(port, www))
         self.server = ThreadingHTTPServer((ip, port), RESTRequestHandler)
         self.server.routes = routes
         self.server.servedir = servedir

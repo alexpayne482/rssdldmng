@@ -96,26 +96,24 @@ class Downloader(ServiceThread):
 
     def connectTransmission(self):
         # connect to transmission
-        if self.tc is None:
+        if self.tconfig is not None and self.tc is None:
             try:
                 log.debug('connect to transmission')
                 self.tc = Transmission(self.tconfig)
             except Exception as e:
-                log.warn('FAILED to connect to transmission')
-                log.debug('exception [{0}]'.format(e))
+                log.warn('FAILED to connect to transmission: exception [{0}]'.format(e))
                 self.tc = None
                 return False
         return True
 
     def connectKodi(self):
         # connect to kodi
-        if self.kd is None:
+        if self.kconfig is not None and self.kd is None:
             try:
                 log.debug('connect to kodi')
                 self.kd = KodiDB(self.kconfig)
             except Exception as e:
-                log.warn('FAILED to connect to kodi')
-                log.debug('exception [{0}]'.format(e))
+                log.warn('FAILED to connect to kodi: exception [{0}]'.format(e))
                 self.kd = None
                 return False
         return True
@@ -172,7 +170,7 @@ class Downloader(ServiceThread):
         return strresult
 
     def checkProgress(self):
-        log.info("checking progress")
+        log.info("checking progress ...")
         self.connectTransmission()
         self.connectKodi()
 

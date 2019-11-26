@@ -20,6 +20,11 @@ if [ ! -z "$USER" ] && [ ! -z "$PASS" ]; then
 	sed -i '/rpc-authentication-required/c\    "rpc-authentication-required": true,' /config/settings.json
 	sed -i "/rpc-username/c\    \"rpc-username\": \"$USER\"," /config/settings.json
 	sed -i "/rpc-password/c\    \"rpc-password\": \"$PASS\"," /config/settings.json
+else
+	# get user and password from rssdldmng configuration file
+	sed -i '/rpc-authentication-required/c\    "rpc-authentication-required": true,' /config/settings.json
+	sed -i "/rpc-username/c\    \"rpc-username\": \"$(jq -r ".transmission.username" /config/configuration.json)\"," /config/settings.json
+	sed -i "/rpc-password/c\    \"rpc-password\": \"$(jq -r ".transmission.password" /config/configuration.json)\"," /config/settings.json
 fi
 
 # permissions
@@ -33,3 +38,6 @@ chown abc:abc \
 	/watch
 
 chmod 755 /config/blocklist-update.sh
+
+# autoupdate rssdldmng from local package if available (for developement purposes)
+[[ ! -f /config/rssdldmng.tar.gz ]] && pip3 install /config/rssdldmng.tar.gz

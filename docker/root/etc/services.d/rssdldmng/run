@@ -2,7 +2,7 @@
 
 _term() {
   echo "Caught SIGTERM signal!"
-  $(which python3) -m rssdldmng --exit
+  #$(which python3) -m rssdldmng --exit
 }
 
         trap _term SIGTERM

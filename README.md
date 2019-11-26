@@ -17,7 +17,27 @@ docker build --no-cache --pull --rm -t alexpayne/rssdldmng:latest https://github
 
 build docker image from local repo
 ```
+python setup.py sdist bdist_wheel
+cp ./dist/$(ls -tR ./dist | grep .tar.gz | head -n 1) ./docker/rssdldmng.tar.gz
 docker build --no-cache --pull --rm -t alexpayne/rssdldmng:latest ./docker
+```
+
+save docker image
+```
+docker save -o docker_rssdldmng.tar alexpayne/rssdldmng
+```
+
+run docker image
+```
+docker run \
+        -e PUID=$UID \
+        -e PGID=$(id -g) \
+        -p 9091:9091 \
+        -p 8090:8090 \
+        -v <path to data>:/config \
+        -v <path to downloads>:/downloads \
+        -v <path to watch folder>:/watch \
+        alexpayne/rssdldmng:latest
 ```
 
 ## Usage (installing from web)

@@ -14,6 +14,7 @@ RUN \
  echo "**** install packages ****" && \
  apk add --no-cache \
 	curl \
+	jq \
 	findutils \
 	jq \
 	openssl \
