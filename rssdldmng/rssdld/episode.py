@@ -9,10 +9,11 @@ log = logging.getLogger(__name__)
 class IState(Enum):
     NONE = 1
     NEW = 2
-    DOWNLOADING = 3
-    UPDATING = 4
-    AVAILABLE = 5
-    WATCHED = 6
+    DOWNLOADING = 13
+    FINISHED = 14
+    UPDATING = 25
+    AVAILABLE = 26
+    WATCHED = 37
 
 
 def getQuality(title):
@@ -73,7 +74,7 @@ class Episode(object):
 
     def __str__(self):
         if self.showname is not None:
-            return "{:<24s} S{:02d}E{:02d} {:6s} {:12s} {:s}".format(
+            return "{:<32s} S{:02d}E{:02d} {:6s} {:12s} {:s}".format(
                 self.showname, self.season, self.episode, self.quality, IState(self.state).name, self.title)
         else:
             return "None type"

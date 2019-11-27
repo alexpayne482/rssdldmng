@@ -20,33 +20,40 @@ _LOGGER = logging.getLogger(__name__)
 
 # default config
 def_config = {
-    "feeds": ["http://showrss.info/other/all.rss"],
     "apiport": API_PORT,
-    "trakt": {
-        "username": "user",
-        "list": "watchlist"
-    },
     "downloader": {
-        "dir": "/media/Series/{seriesname}/Season{seasonno:02}/",
-        "series": [],
-        "quality": ["720p"],
         "feed_poll_interval": 300,
-        "lib_update_interval": 60,
+        "feeds": ["http://showrss.info/other/all.rss"],
+        "filters": {
+            "series": None,
+            "quality": ["720p"]
+        },
+        "poll_interval": 60,
+        "dir": "/media/Series/{seriesname}/Season{seasonno:02}/",
+        "transmission": {
+            "host": 'localhost',
+            "port": 9091,
+            "username": "user",
+            "password": "pass"
+        },
+        "kodi": {
+            "host": 'localhost',
+            "port": 8080,
+            "username": "user",
+            "password": "pass"
+        },
+        "trakt": {
+            "clientid": "",
+            "clientsecret": "",
+            "username": "user",
+            "list": "watchlist"
+        }
     },
-    "transmission": {
-        "host": 'localhost',
-        "port": 9091,
-        "username": "user",
-        "password": "pass"
-    },
-    "kodi": {
-        "host": 'localhost',
-        "port": 8080,
-        "username": "user",
-        "password": "pass"
+    "logging": {
+        "level": "info",
+        "file": None
     }
 }
-
 
 class RSSdldMng:
 
@@ -61,8 +68,22 @@ class RSSdldMng:
         self.db_file = os.path.join(self.config_dir, DB_FILE)
 
         self.config = self.load_config()
+        self.set_logging(self.config.get('logging', None))
         self.downloader = None
         self.http_server = None
+
+    def set_logging(self, config):
+        if not config:
+            return
+
+        if config.get('level') == 'error':
+            logging.getLogger().setLevel(logging.ERROR)
+        elif config.get('level') == 'warning':
+            logging.getLogger().setLevel(logging.WARNING)
+        elif config.get('level') == 'info':
+            logging.getLogger().setLevel(logging.INFO)
+        elif config.get('level') == 'debug':
+            logging.getLogger().setLevel(logging.DEBUG)
 
     def load_config(self):
         if not os.path.isfile(self.config_file):
@@ -87,7 +108,7 @@ class RSSdldMng:
         try:
             _LOGGER.debug("Starting RDM core loop")
 
-            self.downloader = Downloader(self.db_file, self.config)
+            self.downloader = Downloader(self.db_file, self.config.get('downloader', None))
             self.downloader.start()
 
             self.http_server = ApiServer(self.config.get('apiport', API_PORT), self)

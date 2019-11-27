@@ -26,18 +26,17 @@ class Downloader(ServiceThread):
         self.config = config
 
         self.feeds = self.config['feeds']
-        self.dconfig = self.config['downloader']
+        self.fconfig = self.config['filters']
         self.tconfig = self.config['transmission']
-        self.kconfig = self.config['kodi'] if 'kodi' in self.config else None
-        self.tkconfig = self.config['trakt'] if 'trakt' in self.config else None
+        self.kconfig = self.config.get('kodi', None)
+        self.tkconfig = self.config.get('trakt', None)
 
         self.last_feed_poll = 0
-        self.last_lib_update = 0
+        self.last_poll = 0
 
         self.db = None
         self.tc = None
         self.kd = None
-
         self.tk = None
 
         self.series = None
@@ -47,52 +46,65 @@ class Downloader(ServiceThread):
     def serve_starting(self):
         # connect to DB
         self.db = ShowsDB(self.db_file)
-        if self.tkconfig:
-            self.tk = Trakt(self.tkconfig['username'],
-                            self.tkconfig['list'] if 'list' in self.tkconfig else None,
-                            self.tkconfig['report'] if 'report' in self.tkconfig else False)
-        #self.updateSeries()
+        self.connectTrakt()
         log.info('Started downloader')
 
     def serve(self):
         # main loop
-        ipoll = self.dconfig['feed_poll_interval']
-        iupdate = self.dconfig['lib_update_interval']
+        ifeedpoll = self.config['feed_poll_interval']
+        ipoll = self.config['poll_interval']
 
-        if ipoll > 0 and time.time() - self.last_feed_poll >= ipoll:
+        if ifeedpoll > 0 and time.time() - self.last_feed_poll >= ifeedpoll:
             self.last_feed_poll = time.time()
-            self.updateSeries()
+            self.updateFilters()
             self.checkFeeds()
 
-        if iupdate > 0 and time.time() - self.last_lib_update >= iupdate:
-            self.last_lib_update = time.time()
+        if ipoll > 0 and time.time() - self.last_poll >= ipoll:
+            self.last_poll = time.time()
             self.checkProgress()
+
+    def serve_stop(self):
+        log.debug('Stopping downloader')
+        if self.tk and self.tk.auth_start:
+            self.tk.cancel_authentication()
 
     def serve_stopped(self):
         log.info('Stopped downloader')
 
 
-    def updateSeries(self):
-        if 'series' not in self.dconfig and not self.tk:
+    def updateFilters(self):
+        if 'series' not in self.fconfig and not self.tk:
             log.warn('Faild to update series. Neither Trakt config nor series config exists in configuration file')
-            return None
+            return
 
         series = []
+        if 'series' in self.fconfig and isinstance(self.fconfig['series'], list):
+            log.debug('get series from config file')
+            series.extend(self.fconfig['series'])
         if self.tk:
             log.debug('get series from Trakt')
             # TODO: this should be done async ...
-            series.extend(self.tk.getShows())
-        if 'series' in self.dconfig:
-            log.debug('get series from config file')
-            series.extend(self.dconfig['series'])
+            series.extend(self.tk.getTvShows(self.tkconfig.get('list')))
 
         series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
         series = list(set(series))
 
-        log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
-        self.series = series
+        if len(series):
+            log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
+            self.series = series
+        else:
+            log.debug('No series filter will be applied')
 
-        return series
+    def connectTrakt(self):
+        if self.tkconfig is not None and self.tk is None:
+            try:
+                self.tk = Trakt(self.tkconfig)
+                self.tk.authenticate()
+            except Exception as e:
+                log.error("FAILED to authenticate to Trakt [{}]".format(e))
+                self.tk = None
+                return False
+        return True
 
     def connectTransmission(self):
         # connect to transmission
@@ -101,7 +113,7 @@ class Downloader(ServiceThread):
                 log.debug('connect to transmission')
                 self.tc = Transmission(self.tconfig)
             except Exception as e:
-                log.warn('FAILED to connect to transmission: exception [{0}]'.format(e))
+                log.error('FAILED to connect to transmission: exception [{0}]'.format(e))
                 self.tc = None
                 return False
         return True
@@ -113,7 +125,7 @@ class Downloader(ServiceThread):
                 log.debug('connect to kodi')
                 self.kd = KodiDB(self.kconfig)
             except Exception as e:
-                log.warn('FAILED to connect to kodi: exception [{0}]'.format(e))
+                log.error('FAILED to connect to kodi: exception [{0}]'.format(e))
                 self.kd = None
                 return False
         return True
@@ -132,21 +144,25 @@ class Downloader(ServiceThread):
         if self.series is not None:
             if ep.showname.lower() not in self.series:
                 return False
-        if 'quality' in self.dconfig and self.dconfig['quality']:
-            if ep.quality not in self.dconfig['quality']:
+        # if 'series' in self.fconfig and self.fconfig['series']:
+        #     if ep.showname.lower() not in self.fconfig['series']:
+        #         return False
+        if 'quality' in self.fconfig and self.fconfig['quality']:
+            if ep.quality not in self.fconfig['quality']:
                 return False
         return True
 
     def checkFeeds(self):
-        # check rss feeds for new items
+        log.debug("-------------------------------------------------------------------------------")
         for feed in self.feeds:
             self.checkFeed(feed)
 
     def checkFeed(self, feed):
+        log.info("check rss feed {0}".format(feed))
+
         total = 0
         added = 0
         skipped = 0
-        log.info("check rss feed {0}".format(feed))
 
         for ep in self.getFeedEpisodes(feed):
             total += 1
@@ -157,7 +173,7 @@ class Downloader(ServiceThread):
             dbep = self.db.getEpisode(ep.hash)
             if not dbep:
                 ep.state = IState.NEW.value
-                ep.set_dir(self.config['downloader']['dir'])
+                ep.set_dir(self.config['dir'])
                 # TODO: ep.date = now()
                 dbep = self.db.addEpisode(ep)
                 log.debug('add to db : %s', dbep)
@@ -170,7 +186,9 @@ class Downloader(ServiceThread):
         return strresult
 
     def checkProgress(self):
+        log.debug("-------------------------------------------------------------------------------")
         log.info("checking progress ...")
+
         self.connectTransmission()
         self.connectKodi()
 
@@ -207,14 +225,20 @@ class Downloader(ServiceThread):
                 else:
                     log.debug('finished  : %s', ep)
                     self.tc.stop(ep.hash)
-                    if self.kd is not None:
-                        # add to kodi
-                        self.kd.updateLibPath(ep.dir)
-                        # update state to UPDATING
-                        self.db.updateEpisodeState(ep, IState.UPDATING.value)
+                    self.db.updateEpisodeState(ep, IState.FINISHED.value)
             else:
                 self.tc.add(ep.link, ep.dir)
                 log.debug('add to tr : %s', ep)
+
+        for ep in self.db.getEpisodes(IState.FINISHED.value):
+            # remove from transmission
+            log.debug('remove tr : %s', ep)
+            self.tc.remove(ep.hash)
+            if self.kd is not None:
+                # add to kodi
+                self.kd.updateLibPath(ep.dir)
+                # update state to UPDATING
+                self.db.updateEpisodeState(ep, IState.UPDATING.value)
 
         if self.kd is None:
             return
@@ -251,6 +275,19 @@ class Downloader(ServiceThread):
 
         self.dumpStats()
 
+    def dumpStats(self):
+        # print stats
+        log.debug("new {0}, downloading {1}, updating {2}, available {3}, watched {4}, invalid {5}".format(
+                len(self.db.getEpisodes(IState.NEW.value)),
+                len(self.db.getEpisodes(IState.DOWNLOADING.value)),
+                len(self.db.getEpisodes(IState.UPDATING.value)),
+                len(self.db.getEpisodes(IState.AVAILABLE.value)),
+                len(self.db.getEpisodes(IState.WATCHED.value)),
+                len(self.db.getEpisodes(IState.NONE.value))
+            ))
+
+    # extern API
+
     def getEpisodesFull(self, state=-1, published=-1):
         lst = []
         for ep in self.db.getEpisodes(state, published):
@@ -270,6 +307,7 @@ class Downloader(ServiceThread):
     def getEpisodes(self, state=-1, published=-1):
         return self.db.getEpisodes(state, published)
 
+    # manual state update
     def updateEpisode(self, ephash, state):
         dbep = self.db.getEpisode(ephash)
         if dbep:
@@ -280,17 +318,6 @@ class Downloader(ServiceThread):
                 self.tk.setWatched(dbep.showname, dbep.season, dbep.episode)
             return True
         return False
-
-    def dumpStats(self):
-        # print stats
-        log.debug("new {0}, downloading {1}, updating {2}, available {3}, watched {4}, invalid {5}".format(
-                len(self.db.getEpisodes(IState.NEW.value)),
-                len(self.db.getEpisodes(IState.DOWNLOADING.value)),
-                len(self.db.getEpisodes(IState.UPDATING.value)),
-                len(self.db.getEpisodes(IState.AVAILABLE.value)),
-                len(self.db.getEpisodes(IState.WATCHED.value)),
-                len(self.db.getEpisodes(IState.NONE.value))
-            ))
 
     def dumpDB(self):
         log.debug("get all db items with status")

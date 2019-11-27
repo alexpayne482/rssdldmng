@@ -24,6 +24,7 @@ class ServiceThread(Thread):
 
     def stop(self):
         self.__stop_request = True
+        self.serve_stop()
         self.__is_stopped.wait()
         Thread.join(self)
 
@@ -32,6 +33,9 @@ class ServiceThread(Thread):
 
     def serve(self):
         raise NotImplementedError("Please Implement this method")
+
+    def serve_stop(self):
+        pass
 
     def serve_stopped(self):
         raise NotImplementedError("Please Implement this method")

@@ -7,7 +7,7 @@ import logging
 from http.server import BaseHTTPRequestHandler, HTTPServer  # , ThreadingHTTPServer
 from socketserver import ThreadingMixIn
 
-_LOGGER = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 www = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../www')
 
@@ -54,7 +54,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
     def handle_file(self, method, route):
         if method == 'GET':
             try:
-                _LOGGER.debug('xhandle file: {0}'.format(self.get_file_path(route)))
+                log.debug('xhandle file: {0}'.format(self.get_file_path(route)))
                 f = open(self.get_file_path(route), "rb")
                 try:
                     self.send_response(200)
@@ -65,7 +65,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
                 finally:
                     f.close()
             except Exception as e:
-                _LOGGER.debug('exception  : {0}'.format(e))
+                log.debug('exception  : {0}'.format(e))
                 #raise e
                 self.send_response(404)
                 self.end_headers()
@@ -131,8 +131,9 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 
 class RESTHttpServer():
     def __init__(self, ip, port, routes=None, servedir=None):
-        _LOGGER.info('Starting HTTP server on port {0}, root {1}'.format(port, www))
+        log.info('Starting HTTP server on port {0}, root {1}'.format(port, www))
         self.server = ThreadingHTTPServer((ip, port), RESTRequestHandler)
+        log.debug('HTTP server started')
         self.server.routes = routes
         self.server.servedir = servedir
 
@@ -140,9 +141,9 @@ class RESTHttpServer():
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
-        _LOGGER.info('Started HTTP server at {0}'.format(self.server.server_address))
+        log.info('Started HTTP server at {0}'.format(self.server.server_address))
 
     def stop(self):
         self.server.shutdown()
         self.server_thread.join()
-        _LOGGER.info('Stopped HTTP server')
+        log.info('Stopped HTTP server')

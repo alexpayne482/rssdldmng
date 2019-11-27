@@ -40,4 +40,4 @@ chown abc:abc \
 chmod 755 /config/blocklist-update.sh
 
 # autoupdate rssdldmng from local package if available (for developement purposes)
-[[ ! -f /config/rssdldmng.tar.gz ]] && pip3 install /config/rssdldmng.tar.gz
+[[ ! -f /config/rssdldmng.tar.gz ]] && echo "reinstalling RDM" && pip3 uninstall rssdldmng && pip3 install /config/rssdldmng.tar.gz
