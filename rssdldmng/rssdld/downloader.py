@@ -277,9 +277,10 @@ class Downloader(ServiceThread):
 
     def dumpStats(self):
         # print stats
-        log.debug("new {0}, downloading {1}, updating {2}, available {3}, watched {4}, invalid {5}".format(
+        log.info("new {}, downloading {}, finished {}, updating {}, available {}, watched {}, invalid {}".format(
                 len(self.db.getEpisodes(IState.NEW.value)),
                 len(self.db.getEpisodes(IState.DOWNLOADING.value)),
+                len(self.db.getEpisodes(IState.FINISHED.value)),
                 len(self.db.getEpisodes(IState.UPDATING.value)),
                 len(self.db.getEpisodes(IState.AVAILABLE.value)),
                 len(self.db.getEpisodes(IState.WATCHED.value)),
