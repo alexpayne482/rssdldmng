@@ -230,10 +230,13 @@ class Downloader(ServiceThread):
                 self.tc.add(ep.link, ep.dir)
                 log.debug('add to tr : %s', ep)
 
+        log.debug("remove finished items from transmission")
         for ep in self.db.getEpisodes(IState.FINISHED.value):
             # remove from transmission
-            log.debug('remove tr : %s', ep)
-            self.tc.remove(ep.hash)
+            tcitem = self.tc.get(ep.hash)
+            if tcitem:
+                log.debug('remove tr : %s', ep)
+                self.tc.remove(ep.hash)
             if self.kd is not None:
                 # add to kodi
                 self.kd.updateLibPath(ep.dir)
@@ -241,6 +244,7 @@ class Downloader(ServiceThread):
                 self.db.updateEpisodeState(ep, IState.UPDATING.value)
 
         if self.kd is None:
+            self.dumpStats()
             return
 
         # mark items found in kodi as available
