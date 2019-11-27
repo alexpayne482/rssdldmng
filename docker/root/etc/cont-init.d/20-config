@@ -23,8 +23,8 @@ if [ ! -z "$USER" ] && [ ! -z "$PASS" ]; then
 else
 	# get user and password from rssdldmng configuration file
 	sed -i '/rpc-authentication-required/c\    "rpc-authentication-required": true,' /config/settings.json
-	sed -i "/rpc-username/c\    \"rpc-username\": \"$(jq -r ".transmission.username" /config/configuration.json)\"," /config/settings.json
-	sed -i "/rpc-password/c\    \"rpc-password\": \"$(jq -r ".transmission.password" /config/configuration.json)\"," /config/settings.json
+	sed -i "/rpc-username/c\    \"rpc-username\": \"$(jq -r ".downloader.transmission.username" /config/configuration.json)\"," /config/settings.json
+	sed -i "/rpc-password/c\    \"rpc-password\": \"$(jq -r ".downloader.transmission.password" /config/configuration.json)\"," /config/settings.json
 fi
 
 # permissions
