@@ -74,6 +74,7 @@ def main() -> int:
     # config
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
+    import trakt.core; trakt.core.CONFIG_PATH = os.path.join(config_dir, '.pytrakt.json')
 
     # logging
     FORMAT = '%(asctime)-15s %(levelname)-7s %(name)-30s %(message)s'
