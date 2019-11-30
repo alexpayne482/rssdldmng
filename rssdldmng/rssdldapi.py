@@ -32,14 +32,14 @@ class ApiServer(RESTHttpServer):
     def get_shows(self, handler):
         if not self.manager.downloader:
             return 'internal error'
-        return self.manager.downloader.getSeries(True)
+        return self.manager.downloader.series
 
     def put_shows(self, handler):
-        if type(self.manager.config['downloader']['series']) is str:
+        if type(self.manager.config['downloader']['filters']['series']) is str:
             return 'FAIL'
         shows = handler.get_payload()
         _LOGGER.debug("set_shows: {0}".format(shows))
-        self.manager.config['downloader']['series'] = shows
+        self.manager.config['downloader']['filters']['series'] = shows
         self.manager.save_config(self.manager.config)
         return 'OK'
 
@@ -65,7 +65,7 @@ class ApiServer(RESTHttpServer):
         if 'feed' not in params:
             return 'no feed provided'
 
-        res = self.manager.downloader.checkFeed(params['feed'])
+        res = self.manager.downloader.parseFeed(params['feed'])
         return res
 
     def get_db(self, handler):
@@ -98,7 +98,7 @@ class ApiServer(RESTHttpServer):
         if args[0] == 'set':
             if len(args) < 3:
                 return 'no hash provided or state'
-            if not self.manager.update_episode(args[1], int(args[2])):
+            if not self.manager.downloader.updateEpisode(args[1], int(args[2])):
                 return 'FAIL'
             return 'OK'
 

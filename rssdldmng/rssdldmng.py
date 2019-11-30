@@ -25,7 +25,7 @@ def_config = {
         "feed_poll_interval": 300,
         "feeds": ["http://showrss.info/other/all.rss"],
         "filters": {
-            "series": None,
+            "series": "trakt:watchlist",
             "quality": ["720p"]
         },
         "poll_interval": 60,
@@ -46,7 +46,6 @@ def_config = {
             "clientid": "",
             "clientsecret": "",
             "username": "user",
-            "list": "watchlist"
         }
     },
     "logging": {
@@ -162,7 +161,3 @@ class RSSdldMng:
             return {"new": new, "downloading": downloading, "available": available}
         return "NA"
 
-    def update_episode(self, ephash, state):
-        if self.downloader:
-            return self.downloader.updateEpisode(ephash, state)
-        return False

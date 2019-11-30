@@ -71,30 +71,6 @@ class Downloader(ServiceThread):
     def serve_stopped(self):
         log.info('Stopped downloader')
 
-
-    def updateFilters(self):
-        if 'series' not in self.fconfig and not self.tk:
-            log.warn('Faild to update series. Neither Trakt config nor series config exists in configuration file')
-            return
-
-        series = []
-        if 'series' in self.fconfig and isinstance(self.fconfig['series'], list):
-            log.debug('get series from config file')
-            series.extend(self.fconfig['series'])
-        if self.tk:
-            log.debug('get series from Trakt')
-            # TODO: this should be done async ...
-            series.extend(self.tk.getTvShows(self.tkconfig.get('list')))
-
-        series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
-        series = list(set(series))
-
-        if len(series):
-            log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
-            self.series = series
-        else:
-            log.debug('No series filter will be applied')
-
     def connectTrakt(self):
         if self.tkconfig is not None and self.tk is None:
             try:
@@ -130,12 +106,34 @@ class Downloader(ServiceThread):
                 return False
         return True
 
-    def getFeedEpisodes(self, feed):
-        pfeed = feedparser.parse(feed)
-        items = []
-        for item in pfeed['items']:
-            items.append(Episode(item))
-        return items
+    def updateFilters(self):
+        series = []
+        if 'series' in self.fconfig :
+            if isinstance(self.fconfig['series'], list):
+                log.debug('get series from config file')
+                series.extend(self.fconfig['series'])
+            elif isinstance(self.fconfig['series'], str):
+                if self.fconfig['series'].startswith('trakt:'):
+                    tklist = self.fconfig['series'].split(':')[1]
+                    if self.tk:
+                        log.debug('get series from Trakt')
+                        # TODO: this should be done async ...
+                        series.extend(self.tk.getTvShows(tklist))
+                    else:
+                        log.warn('not connected to Trakt: could not get series list')
+                else:
+                    log.debug('unsupported series filter string format')
+            else:
+                log.debug('unsupported series filter format')
+
+        series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
+        series = list(set(series))
+
+        if len(series):
+            log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
+            self.series = series
+        else:
+            log.debug('No series filter will be applied')
 
     def checkFilter(self, ep):
         # filter out specials ???
@@ -152,12 +150,19 @@ class Downloader(ServiceThread):
                 return False
         return True
 
+    def getFeedEpisodes(self, feed):
+        pfeed = feedparser.parse(feed)
+        items = []
+        for item in pfeed['items']:
+            items.append(Episode(item))
+        return items
+
     def checkFeeds(self):
         log.debug("-------------------------------------------------------------------------------")
         for feed in self.feeds:
-            self.checkFeed(feed)
+            self.parseFeed(feed)
 
-    def checkFeed(self, feed):
+    def parseFeed(self, feed):
         log.info("check rss feed {0}".format(feed))
 
         total = 0
