@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row">
+      <h5 class="config-subtitle">/h5>
+    </div>
+    <div class="row">
+      <div class="twelve columns">
+        {{ form.dir.label(style="display: inline;") }}
+        {% if form.dir.errors[0] %}
+          <span class="validation-error">[{{ form.dir.errors[0] }}]</span>
+        {% endif %}
+        {{ form.dir(class_="u-full-width", placeholder="/media/Shows/{seriesname}/Season{seasonno:02}/", maxlength=150) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="eight columns">
+        {{ form.feeds[0].label(style="display: inline;") }}
+        {% if form.feeds[0].errors[0] %}
+          <span class="validation-error">[{{ form.feeds[0].errors[0] }}]</span>
+        {% endif %}
+        {{ form.feeds[0](class_="u-full-width", placeholder="http://abc/abc.rss", maxlength=150) }}
+      </div>
+      <div class="four columns">
+        {{ form.feed_poll_interval.label(style="display: inline;") }}
+        {% if form.feed_poll_interval.errors[0] %}
+          <span class="validation-error">[{{ form.feed_poll_interval.errors[0] }}]</span>
+        {% endif %}
+        {{ form.feed_poll_interval(class_="u-full-width", placeholder="seconds", maxlength=7) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.filters.quality[0].label(style="display: inline;") }}
+        {% if form.filters.quality[0].errors[0] %}
+          <span class="validation-error">[{{ form.filters.quality[0].errors[0] }}]</span>
+        {% endif %}
+        {{ form.filters.quality[0](class_="u-full-width") }}
+      </div>
+    </div>
+    <div class="row">
+      <h5 class="config-subtitle">Trakt</h5>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.trakt.clientid.label(style="display: inline;") }}
+        {% if form.trakt.clientid.errors[0] %}
+          <span class="validation-error">[{{ form.trakt.clientid.errors[0] }}]</span>
+        {% endif %}
+        {{ form.trakt.clientid(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="six columns">
+        {{ form.trakt.clientsecret.label(style="display: inline;") }}
+        {% if form.trakt.clientsecret.errors[0] %}
+          <span class="validation-error">[{{ form.trakt.clientsecret.errors[0] }}]</span>
+        {% endif %}
+        {{ form.trakt.clientsecret(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.trakt.username.label(style="display: inline;") }}
+        {% if form.trakt.username.errors[0] %}
+          <span class="validation-error">[{{ form.trakt.username.errors[0] }}]</span>
+        {% endif %}
+        {{ form.trakt.username(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="six columns">
+        {{ form.trakt.tmdbapikey.label(style="display: inline;") }}
+        {% if form.trakt.tmdbapikey.errors[0] %}
+          <span class="validation-error">[{{ form.trakt.tmdbapikey.errors[0] }}]</span>
+        {% endif %}
+        {{ form.trakt.tmdbapikey(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row">
+      <h5 class="config-subtitle">Transmission</h5>
+    </div>
+    <div class="row">
+      <div class="eight columns">
+        {{ form.transmission.host.label(style="display: inline;") }}
+        {% if form.transmission.host.errors[0] %}
+          <span class="validation-error">[{{ form.transmission.host.errors[0] }}]</span>
+        {% endif %}
+        {{ form.transmission.host(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="four columns">
+        {{ form.transmission.port.label(style="display: inline;") }}
+        {% if form.transmission.port.errors[0] %}
+          <span class="validation-error">[{{ form.transmission.port.errors[0] }}]</span>
+        {% endif %}
+        {{ form.transmission.port(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.transmission.username.label(style="display: inline;") }}
+        {% if form.transmission.username.errors[0] %}
+          <span class="validation-error">[{{ form.transmission.username.errors[0] }}]</span>
+        {% endif %}
+        {{ form.transmission.username(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="six columns">
+        {{ form.transmission.password.label(style="display: inline;") }}
+        {% if form.transmission.password.errors[0] %}
+          <span class="validation-error">[{{ form.transmission.password.errors[0] }}]</span>
+        {% endif %}
+        {{ form.transmission.password(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row">
+      <h5 class="config-subtitle">Kodi</h5>
+    </div>
+    <div class="row">
+      <div class="eight columns">
+        {{ form.kodi.host.label(style="display: inline;") }}
+        {% if form.kodi.host.errors[0] %}
+          <span class="validation-error">[{{ form.kodi.host.errors[0] }}]</span>
+        {% endif %}
+        {{ form.kodi.host(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="four columns">
+        {{ form.kodi.port.label(style="display: inline;") }}
+        {% if form.kodi.port.errors[0] %}
+          <span class="validation-error">[{{ form.kodi.port.errors[0] }}]</span>
+        {% endif %}
+        {{ form.kodi.port(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.kodi.username.label(style="display: inline;") }}
+        {% if form.kodi.username.errors[0] %}
+          <span class="validation-error">[{{ form.kodi.username.errors[0] }}]</span>
+        {% endif %}
+        {{ form.kodi.username(class_="u-full-width", maxlength=70) }}
+      </div>
+      <div class="six columns">
+        {{ form.kodi.password.label(style="display: inline;") }}
+        {% if form.kodi.password.errors[0] %}
+          <span class="validation-error">[{{ form.kodi.password.errors[0] }}]</span>
+        {% endif %}
+        {{ form.kodi.password(class_="u-full-width", maxlength=70) }}
+      </div>
+    </div>
+    <div class="row" style="margin-top: 3rem;">
+      {{ form.submit(class_="button-primary") }}
+      {{ form.cancel() }}
+    </div>
+  </form>
+{% endblock %}

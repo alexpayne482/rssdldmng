@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <table class="u-full-width episode-list">
+          <tbody>
+            {% for episode in episodes %}
+            <tr>
+              <td>
+                <div class="episode-list-item">
+                  <table style="width:100%">
+                    <tr>
+                      <td style="width:100px">
+                        <div class="episode-poster-container">
+                          {% if episode.poster %}
+                            <img class="episode-poster" src="{{ episode.poster }}">
+                          {% else %}
+                            <img class="episode-poster" src="static/img/poster-placeholder.png">
+                          {% endif %}
+                          {% if episode.state <= 2 %}
+                            <i class="material-icons md-36 episode-state blue">fiber_new</i>
+                          {% elif episode.state <= 13 %}
+                            <i class="material-icons md-36 episode-state blue">cloud_download</i>
+                          {% elif episode.state <= 14 %}
+                            <i class="material-icons md-36 episode-state green">cloud_download</i>
+                          {% elif episode.state <= 25 %}
+                            <i class="material-icons md-36 episode-state blue">update</i>
+                          {% elif episode.state <= 26 %}
+                            <i class="material-icons md-36 episode-state green">event_available</i>
+                          {% elif episode.state <= 37 %}
+                            <i class="material-icons md-36 episode-state green">check</i>
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td style="vertical-align:top; width:*">
+                        <div class="episode-showtitle">{{ episode.showname }}</div>
+                        <div class="episode-seasoninfo">season {{ episode.season}}&nbsp;&nbsp;&nbsp; episode {{ episode.episode }}</div>
+                        <div class="episode-title">{{ episode.title }}</div>
+                        <div class="episode-date">{{ episode.dateadded }}</div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+{% endblock %}

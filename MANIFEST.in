@@ -1,4 +1,8 @@
 include *.md
 include LICENSE
 include requirements.txt
-include rssdldmng/www/*.*
+include rssdldmng/api/server.py
+include rssdldmng/api/static/css/*.*
+include rssdldmng/api/static/img/*.*
+include rssdldmng/api/static/js/*.*
+include rssdldmng/api/templates/*.*

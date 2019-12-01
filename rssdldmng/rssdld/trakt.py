@@ -13,13 +13,14 @@ class Trakt():
 
     def __init__(self, config):
         assert(config)
-        assert('username' in config)
 
-        self.username = config['username']
+        self.username = config.username
 
-        self.client_id = config.get('clientid', None)
-        self.client_secret = config.get('clientsecret', None)
-        self.report_progress = config.get('reportprogress', False)
+        self.client_id = config.clientid
+        self.client_secret = config.clientsecret
+        self.report_progress = config.reportprogress
+        self.tmdb_api_key = config.tmdbapikey
+
         self.device_code = None
         self.user_code = None
         self.interval = 0
@@ -28,6 +29,8 @@ class Trakt():
         self.verification_url = None
         self.authenticated = None
         self.cancel = False
+
+        self.posterCache = {}
 
         try:
             import trakt.users
@@ -161,6 +164,40 @@ class Trakt():
         return shows
 
     #@_authenticate
+    def getPoster(self, showname, seasonno=None):
+        key = showname + '_' + str(seasonno)
+        if key in self.posterCache:
+            return self.posterCache[key]
+
+        if not self.is_authenticated():
+            log.warn('Not authenticated to Trakt')
+            return None
+
+        import trakt.users
+        try:
+            show = trakt.tv.TVShow(showname)
+
+            if not self.tmdb_api_key: return None
+
+            import requests
+            ids = show.ids.get('ids')
+            if not ids: return None
+            tmdbid = ids.get('tmdb')
+            if not tmdbid: return None
+
+            response = requests.get('https://api.themoviedb.org/3/tv/{}?api_key={}&language=en-US'.format(tmdbid, self.tmdb_api_key))
+
+            #TODO: season[].poster_path
+            uri = 'https://image.tmdb.org/t/p/w154/' + response.json()['poster_path'] 
+            
+            self.posterCache[key] = uri
+            return uri
+
+        except (trakt.errors.NotFoundException, Exception) as e:
+            log.warn('WRN: cannot get poster for {:s} [{:}]'.format(showname, e))
+        return None
+
+    #@_authenticate
     def setCollected(self, showname, season, episode):
         if not self.is_authenticated():
             log.warn('Not authenticated to Trakt')
@@ -173,7 +210,7 @@ class Trakt():
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.add_to_collection()
         except (trakt.errors.NotFoundException, Exception) as e:
-            print('WRN: cannot set collected {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
+            log.warn('WRN: cannot set collected {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True
 
@@ -190,6 +227,6 @@ class Trakt():
             ep = trakt.tv.TVEpisode(showname, season, episode)
             ep.mark_as_seen()
         except (trakt.errors.NotFoundException, Exception) as e:
-            print('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
+            log.warn('WRN: cannot set watched {:s} S{:02d}E{:02d} [{:}]'.format(showname, season, episode, e))
             return False
         return True

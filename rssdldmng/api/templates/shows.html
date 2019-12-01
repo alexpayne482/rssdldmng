@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+      {% if shows %}
+        <ul class="u-full-width episode-list">
+          {% for show in shows %}
+          <li>
+            {{ show|capitalize }}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="row">
+          <p>No shows or Trakt list specified</p>
+        </div>
+      {% endif %}
+      <div class="row">
+        <p style="font-size: 0.8em; text-align: right;">Modify this list by adding shows to Trakt 'watchlist'</p>
+      </div>
+{% endblock %}

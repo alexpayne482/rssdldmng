@@ -29,15 +29,16 @@ def getQuality(title):
 
 def getNumbering(title):
     try:
-        m = re.search('.*S([0-9]{2})E([0-9]{2}).*', title, re.IGNORECASE)
+        m = re.search(r'.*S(\d{1,2})E(\d{1,2}).*', title, re.IGNORECASE)
+        #m = re.search('.*S([0-9]{2})E([0-9]{2}).*', title, re.IGNORECASE)
         return [int(m.group(1)), int(m.group(2))]
     except Exception:
         try:
-            m = re.search('.*([0-9]{1,2})x([0-9]{2}).*', title, re.IGNORECASE)
+            m = re.search(r'.*\s(\d{1,2})x(\d{1,2}).*', title, re.IGNORECASE)
+            #m = re.search('.*([0-9]{1,2})x([0-9]{2}).*', title, re.IGNORECASE)
             return [int(m.group(1)), int(m.group(2))]
         except Exception:
             return [0, 0]
-
 
 class Episode(object):
 

@@ -1,0 +1,148 @@
+/* Rules for sizing the icon. */
+.material-icons.md-18 { font-size: 1.7px; }
+.material-icons.md-24 { font-size: 2.2px; }
+.material-icons.md-36 { font-size: 3.2rem; }
+.material-icons.md-48 { font-size: 4.2rem; }
+
+/* Rules for using icons as black on a light background. */
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+/* Rules for using icons as white on a dark background. */
+.material-icons.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+.content {
+    top: 80px;
+    padding-top: 10px;
+}
+table {
+    margin-bottom: 0px;
+}
+
+.green  { color:#91d160; }
+.blue   { color:#609ad1; }
+.orange { color:#d19760; }
+.purple { color:#9760d1; }
+
+ /* Style buttons */
+button {
+    border: none; /* Remove borders */
+    padding: 6px;
+}
+button.dark {
+    color: rgba(255, 255, 255, 0.8);
+}
+button.dark:hover {
+    color: rgba(255, 255, 255, 0.54);
+}
+
+/* navigation */
+.main-nav {
+    background-color: rgb(33, 33, 33);
+    color: rgba(255, 255, 255, 0.8);
+    height: 60px;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 500;
+    z-index: 98;
+}
+.main-nav a {
+    color: inherit;
+    text-decoration: none;
+}
+.main-nav .nav-title {
+    font-size: 4.2rem;
+    color: inherit;
+}
+.main-nav .flex {
+    flex: 1;
+}
+
+/* episode list */
+.episode-list {
+    width: 100%;
+    border-spacing: 0px !important;
+    margin-bottom: 0px;
+}
+.episode-list td {
+    border: none !important;
+    border-spacing: 0px !important;
+    line-height: 20px !important;
+    padding: 0px 0px;
+    margin-bottom: 0px !important;
+}
+.episode-list-item {
+    font-weight: $font-light;
+    width: 100%;
+    font-size: 16px;
+    text-align: left !important;
+    transition: 0.8s padding ease;
+}
+.episode-list-item:hover {
+    background-color: #d9e6f2;
+}
+.episode-list-item .episode-poster-container {
+    height: 150px;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+.episode-list-item .episode-poster {
+    height: 150px;
+    display: block;
+    position: absolute;
+    z-index: 2;
+}
+.episode-list-item .episode-state {
+    position: relative;
+    z-index: 3;
+
+}
+.episode-list-item .episode-showtitle {
+    padding: 0px 0px 0px 15px;
+    font-weight: 500;
+    font-size: 18px;
+}
+.episode-list-item .episode-seasoninfo {
+    padding: 0px 0px 0px 0px;
+    font-size: 12px;
+    text-align: right;
+}
+.episode-list-item .episode-title {
+    padding: 5px 0px 0px 15px;
+}
+.episode-list-item .episode-date {
+    padding: 0px 0px 0px 0px;
+    text-align: right;
+    font-size: 10px;
+}
+
+.validation-error {
+    color: red;
+    float:right;
+}
+
+#toast-container>div {
+    opacity: 1 !important;
+    -moz-box-shadow: 0 0 0px #999999;
+    -webkit-box-shadow: 0 0 0px #999999;
+    box-shadow: 0 0 0px #999999;
+}
+#toast-container .toast-message li {
+    margin-bottom: 0px;
+    margin-left: 2rem;
+}
+
+.config-subtitle {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}

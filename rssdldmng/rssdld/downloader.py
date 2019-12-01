@@ -1,6 +1,9 @@
 import time
 import re
 import logging
+import json
+import urllib.parse
+from enum import Enum
 
 import feedparser
 
@@ -14,6 +17,11 @@ from .trakt import Trakt
 
 log = logging.getLogger(__name__)
 
+class SkipReason(Enum):
+    NONE = 1
+    SERIES = 2
+    QUALITY = 3
+    SEASON = 4
 
 class Downloader(ServiceThread):
     """"
@@ -25,41 +33,31 @@ class Downloader(ServiceThread):
         self.db_file = db_file
         self.config = config
 
-        self.feeds = self.config['feeds']
-        self.fconfig = self.config['filters']
-        self.tconfig = self.config['transmission']
-        self.kconfig = self.config.get('kodi', None)
-        self.tkconfig = self.config.get('trakt', None)
-
         self.last_feed_poll = 0
         self.last_poll = 0
 
-        self.db = None
+        self.db = ShowsDB(self.db_file)
         self.tc = None
         self.kd = None
         self.tk = None
 
-        self.series = None
+        self.epFilter = {}
 
         ServiceThread.__init__(self)
 
     def serve_starting(self):
         # connect to DB
-        self.db = ShowsDB(self.db_file)
         self.connectTrakt()
         log.info('Started downloader')
 
     def serve(self):
         # main loop
-        ifeedpoll = self.config['feed_poll_interval']
-        ipoll = self.config['poll_interval']
-
-        if ifeedpoll > 0 and time.time() - self.last_feed_poll >= ifeedpoll:
+        if self.config.feed_poll_interval > 0 and time.time() - self.last_feed_poll >= self.config.feed_poll_interval:
             self.last_feed_poll = time.time()
-            self.updateFilters()
+            self.updateFilter()
             self.checkFeeds()
 
-        if ipoll > 0 and time.time() - self.last_poll >= ipoll:
+        if self.config.poll_interval > 0 and time.time() - self.last_poll >= self.config.poll_interval:
             self.last_poll = time.time()
             self.checkProgress()
 
@@ -72,83 +70,83 @@ class Downloader(ServiceThread):
         log.info('Stopped downloader')
 
     def connectTrakt(self):
-        if self.tkconfig is not None and self.tk is None:
+        if self.config.trakt is not None and self.tk is None:
             try:
-                self.tk = Trakt(self.tkconfig)
+                log.debug('connect to Trakt as {}'.format(self.config.trakt.username))
+                self.tk = Trakt(self.config.trakt)
                 self.tk.authenticate()
             except Exception as e:
-                log.error("FAILED to authenticate to Trakt [{}]".format(e))
+                log.error("FAILED to authenticate/connect to Trakt [{}]".format(e))
                 self.tk = None
                 return False
         return True
 
     def connectTransmission(self):
         # connect to transmission
-        if self.tconfig is not None and self.tc is None:
+        if self.config.transmission is not None and self.tc is None:
             try:
-                log.debug('connect to transmission')
-                self.tc = Transmission(self.tconfig)
+                log.debug('connect to Transmission {}:{} as {}'.format(self.config.transmission.host, self.config.transmission.port, self.config.transmission.username))
+                self.tc = Transmission(self.config.transmission)
             except Exception as e:
-                log.error('FAILED to connect to transmission: exception [{0}]'.format(e))
+                log.error('FAILED to connect to Transmission: exception [{0}]'.format(e))
                 self.tc = None
                 return False
         return True
 
     def connectKodi(self):
         # connect to kodi
-        if self.kconfig is not None and self.kd is None:
+        if self.config.kodi is not None and self.kd is None:
             try:
-                log.debug('connect to kodi')
-                self.kd = KodiDB(self.kconfig)
+                log.debug('connect to Kodi {}:{} as {}'.format(self.config.kodi.host, self.config.kodi.port, self.config.kodi.username))
+                self.kd = KodiDB(self.config.kodi)
             except Exception as e:
-                log.error('FAILED to connect to kodi: exception [{0}]'.format(e))
+                log.error('FAILED to connect to Kodi: exception [{0}]'.format(e))
                 self.kd = None
                 return False
         return True
 
-    def updateFilters(self):
-        series = []
-        if 'series' in self.fconfig :
-            if isinstance(self.fconfig['series'], list):
-                log.debug('get series from config file')
-                series.extend(self.fconfig['series'])
-            elif isinstance(self.fconfig['series'], str):
-                if self.fconfig['series'].startswith('trakt:'):
-                    tklist = self.fconfig['series'].split(':')[1]
-                    if self.tk:
-                        log.debug('get series from Trakt')
-                        # TODO: this should be done async ...
-                        series.extend(self.tk.getTvShows(tklist))
-                    else:
-                        log.warn('not connected to Trakt: could not get series list')
-                else:
-                    log.debug('unsupported series filter string format')
-            else:
-                log.debug('unsupported series filter format')
+    def updateFilter(self):
+        self.epFilter = {}
 
+        series = []
+        for item in self.config.filters.series:
+            if item.startswith('trakt:'):
+                tklist = item.split(':')[1]
+                if self.tk and tklist:
+                    log.debug('get series from Trakt')
+                    # TODO: this should be done async ...
+                    series.extend(self.tk.getTvShows(tklist))
+                else:
+                    log.warn('Not connected to Trakt: could not get series list {}'.format(tklist))
+            else:
+                series.insert(item)
         series = [re.sub('[\\/:"*?<>|]+', '', x).lower() for x in series]
         series = list(set(series))
 
-        if len(series):
-            log.debug('Series updated [{0}]: \n{1}'.format(len(series), str.join(', ', series)))
-            self.series = series
-        else:
-            log.debug('No series filter will be applied')
+        quality = self.config.filters.quality
 
-    def checkFilter(self, ep):
+        self.epFilter['series'] = series if len(series) else None
+        self.epFilter['quality'] = quality if len(quality) else None
+
+        log.debug('filter updated: {}'.format(self.epFilter))
+
+    def checkFilter(self, ep, filter):
         # filter out specials ???
         # if ep.season <= 0 or ep.episode <= 0:
         #    return False
-        if self.series is not None:
-            if ep.showname.lower() not in self.series:
-                return False
-        # if 'series' in self.fconfig and self.fconfig['series']:
-        #     if ep.showname.lower() not in self.fconfig['series']:
-        #         return False
-        if 'quality' in self.fconfig and self.fconfig['quality']:
-            if ep.quality not in self.fconfig['quality']:
-                return False
-        return True
+        if filter.get('series') is not None:
+            if ep.showname.lower() not in filter.get('series'):
+                #log.debug('{} not in series'.format(ep.showname.lower()))
+                return SkipReason.SERIES
+        if filter.get('quality') is not None:
+            if ep.quality not in filter.get('quality'):
+                #log.debug('{} not in quality'.format(ep.quality))
+                return SkipReason.QUALITY
+        if filter.get('season') is not None:
+            if ep.season not in filter.get('season'):
+                #log.debug('{} not in season {}'.format(ep.season, filter.get('season')))
+                return SkipReason.SEASON
+        return SkipReason.NONE
 
     def getFeedEpisodes(self, feed):
         pfeed = feedparser.parse(feed)
@@ -159,36 +157,43 @@ class Downloader(ServiceThread):
 
     def checkFeeds(self):
         log.debug("-------------------------------------------------------------------------------")
-        for feed in self.feeds:
-            self.parseFeed(feed)
+        for feed in self.config.feeds:
+            self.parseFeed(feed, self.epFilter)
 
-    def parseFeed(self, feed):
-        log.info("check rss feed {0}".format(feed))
+    def parseFeed(self, feed, fltr):
+        filter = self.epFilter.copy()
+        if fltr is not None:
+            filter.update(fltr)
 
         total = 0
         added = 0
         skipped = 0
+        existing = 0
+
+        log.info("check rss feed {0}, filter {1}".format(feed, filter))
 
         for ep in self.getFeedEpisodes(feed):
             total += 1
-            if not self.checkFilter(ep):
-                log.debug('skipped f : %s', ep)
+            res = self.checkFilter(ep, filter)
+            if res != SkipReason.NONE:
+                log.debug('%-10s: %s', 'SK_' + SkipReason(res).name, ep)
                 skipped += 1
-                continue
-            dbep = self.db.getEpisode(ep.hash)
-            if not dbep:
-                ep.state = IState.NEW.value
-                ep.set_dir(self.config['dir'])
-                # TODO: ep.date = now()
-                dbep = self.db.addEpisode(ep)
-                log.debug('add to db : %s', dbep)
-                added += 1
             else:
-                log.debug('existing  : %s', dbep)
+                dbep = self.db.getEpisode(ep.hash)
+                if not dbep:
+                    ep.state = IState.NEW.value
+                    ep.set_dir(self.config.dir)
+                    # TODO: ep.date = now()
+                    dbep = self.db.addEpisode(ep)
+                    log.debug('add to db : %s', dbep)
+                    added += 1
+                else:
+                    log.debug('existing  : %s', dbep)
+                    existing += 1
 
-        strresult = "found {0} items: {1} accepted, {2} rejected".format(total, added, skipped)
-        log.info(strresult)
-        return strresult
+        log.info("found {0} items: {1} accepted, {2} rejected".format(total, added, skipped))
+        htmlresult = "Found {0} items:<br><ul><li>{1} existing</li><li>{2} new</li><li>{3} skipped</li></ul>".format(total, existing, added, skipped)
+        return htmlresult
 
     def checkProgress(self):
         log.debug("-------------------------------------------------------------------------------")
@@ -303,15 +308,30 @@ class Downloader(ServiceThread):
         for ep in self.db.getEpisodes(state, published):
             tr = {}
             ke = {}
+            poster = None
             if self.tc:
                 tr = self.tc.get(ep.hash)
-            if self.kd:
-                ke = self.kd.getVideo(ep.showname, ep.season, ep.episode)
+            # if self.kd:
+            #     ke = self.kd.getVideo(ep.showname, ep.season, ep.episode)
+            #     if ke:
+            #         poster = ke.art.get('season.poster', None)
+            #         if not poster:
+            #             poster = ke.art.get('tvshow.poster', None)
+            #         if poster:
+            #             if poster.startswith("image://"):
+            #                 poster = poster[8:]
+            #             if poster.endswith("/"):
+            #                 poster = poster[:-1]
+            #             poster = urllib.parse.unquote(poster)
+            # else:
+            if self.tk:
+                poster = self.tk.getPoster(ep.showname)
+            ep.poster = poster
             ep.torrent = tr
             ep.library = ke
             lst.append(ep)
-            # s = json.dumps(ep, default=lambda x: x.__dict__)
-            # log.info(s)
+            log.debug("{} poster".format(ep, poster))
+            #log.debug(json.dumps(ep, default=lambda x: x.__dict__))
         return lst
 
     def getEpisodes(self, state=-1, published=-1):

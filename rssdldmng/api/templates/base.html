@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Application Home Page</title>
+    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
+
+    <link rel="shortcut icon" href="static/img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="static/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="static/img/android-chrome-192x192" sizes=192x192>
+    <link rel="icon" type="image/png" href="static/img/android-chrome-512x512.png" sizes=512x512>
+    <link rel="icon" type="image/png" href="static/img/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="static/img/favicon-16x16.png" sizes="16x16">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" type="text/css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <link rel="stylesheet" href="static/css/normalize.min.css" />
+    <link rel="stylesheet" href="static/css/skeleton.min.css" />
+    <link rel="stylesheet" href="static/css/toastr.min.css" />
+    <link rel="stylesheet" href="static/css/styles.css" />
+
+    <script src="static/js/jquery-2.1.0.min.js"></script>
+
+    <script type="text/javascript">
+      (function($) {
+        $(document).ready(function() {
+          toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "escapeHtml": false,
+            "allowHtml": true,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "0",
+            "hideDuration": "0",
+            "timeOut": "5000",
+            "extendedTimeOut": "0",
+            "showEasing": "linear",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+          };
+          //toastr.info('https://showrss.info/show/127.rss<hr>Found 50 items:<br><ul><li>0 existing</li><li>0 new</li><li>50 skipped</li></ul>', 'Feed added');
+        });
+      })(jQuery);
+    </script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <script type="text/javascript">
+          (function($) {
+            $(document).ready(function() {
+              {% for category, message in messages %}
+                {% if category == 'success' or category == 'info' or category == 'warning' or category == 'error' %}
+                  toastr.{{ category }}('{{ message|safe }}', '{{ category|capitalize }}')
+                {% else %}
+                  toastr.info('{{ message|safe }}', '{{ category|capitalize }}')
+                {% endif %}
+              {% endfor %}
+            });
+          })(jQuery);
+        </script>
+      {% endif %}
+    {% endwith %}
+
+</head>
+<body>
+
+    <nav class="main-nav">
+        <div class="nav-button">
+            <button class="dark" onclick="window.location.href='/'"><i class="material-icons md-48">menu</i></button>
+        </div>
+        <a class="nav-title" href="/">RDM</a>
+        <div class="flex"></div>
+        <div class="nav-item">
+            <button class="dark" onclick="window.location.href='/addfeed'"><i class="material-icons md-48">add</i></button>
+        </div>
+        <div class="nav-item">
+            <button class="dark" onclick="window.location.href='/shows'"><i class="material-icons md-48">list</i></button>
+        </div>
+        <div class="nav-item">
+            <button class="dark" onclick="window.location.href='/config'"><i class="material-icons md-48">settings</i></button>
+        </div>
+    </nav>
+
+    <div class="container content">
+        {% if title %}
+        <div class="row">
+            <h4>{{ title }}</h4>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <script src="static/js/toastr.min.js"></script>
+</body>
+</html>

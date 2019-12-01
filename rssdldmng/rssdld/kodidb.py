@@ -36,9 +36,8 @@ class Video(object):
 
 class KodiDB(object):
     def __init__(self, config):
-        log.debug("init: %s:%d u:%s", config['host'], config['port'], config['username'])
-        self.kd = Kodi(hostname=config['host'], port=config['port'],
-                       username=config['username'], password=config['password'])
+        self.kd = Kodi(hostname=config.host, port=config.port,
+                       username=config.username, password=config.password)
 
     def getVideo(self, show, season, episode):
         try:

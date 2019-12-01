@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row">
+      <div class="twelve columns">
+        {{ form.feed.label(style="display: inline;") }}
+        {% if form.feed.errors[0] %}
+          <span class="validation-error">[{{ form.feed.errors[0] }}]</span>
+        {% endif %}
+        {{ form.feed(class_="u-full-width", placeholder="http://abc/abc.rss", maxlength=150) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        {{ form.quality.label(style="display: inline;") }}
+        {% if form.quality.errors[0] %}
+          <span class="validation-error">[{{ form.quality.errors[0] }}]</span>
+        {% endif %}
+        {{ form.quality(class_="u-full-width") }}
+      </div>
+      <div class="six columns">
+        {{ form.season.label(style="display: inline;") }}
+        {% if form.season.errors[0] %}
+          <span class="validation-error">[{{ form.season.errors[0] }}]</span>
+        {% endif %}
+        {{ form.season(class_="u-full-width", placeholder="any") }}
+      </div>
+    </div>
+    {{ form.submit(class_="button-primary") }}
+  </form>
+{% endblock %}
