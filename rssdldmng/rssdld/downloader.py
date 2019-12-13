@@ -202,6 +202,15 @@ class Downloader(ServiceThread):
         self.connectTransmission()
         self.connectKodi()
 
+        if self.kd:
+            log.debug("checking new items are in library")
+            self.kd.kd.VideoLibrary.Scan()
+            for ep in self.db.getEpisodes(IState.NEW.value):
+                # if item already in kodi, skip it
+                if self.kd.getVideo(ep.showname, ep.season, ep.episode):
+                    log.debug('in library: %s', ep)
+                    self.db.updateEpisodeState(ep, IState.AVAILABLE.value)
+
         if self.tc is None:
             self.dumpStats()
             return
@@ -220,7 +229,7 @@ class Downloader(ServiceThread):
                 self.tc.add(ep.link, ep.dir)
                 log.debug('add to tr : %s', ep)
             else:
-                log.debug('existing  : %s', ep)
+                log.debug('exists tr: %s', ep)
             self.db.updateEpisodeState(ep, IState.DOWNLOADING.value)
 
         # add finished items in kodi
